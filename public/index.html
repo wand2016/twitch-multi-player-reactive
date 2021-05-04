@@ -32,10 +32,22 @@
     </script>
 
     <script>
+      const query = Object.fromEntries(
+        window.location.search
+          .substr(1)
+          .split("&")
+          .map((group) => group.split("="))
+      );
+      console.log(query);
+      const channels = (query["channels"] || "").split(",");
+      console.log(channels);
+      const queryToRequest = channels.map((ch) => "names[]=" + ch).join("&");
+      console.log(queryToRequest);
+
       const xhr = new XMLHttpRequest();
       xhr.open(
         "GET",
-        "http://localhost:3000/api/users/search-by-name?names[]=wand_ota4"
+        "http://localhost:3000/api/users/search-by-name?" + queryToRequest
       );
       xhr.onerror = (e) => {
         console.log(e);

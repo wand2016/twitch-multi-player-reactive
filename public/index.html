@@ -8,9 +8,8 @@
     static
 
     <input type="button" id="sample" value="送信" />
-
     <script>
-      var sock = new WebSocket("ws://localhost:3000");
+      var sock = new WebSocket("ws://localhost:3000/ws");
 
       // 接続
       sock.addEventListener("open", function (e) {
@@ -30,6 +29,21 @@
             sock.send("hello");
           });
       });
+    </script>
+
+    <script>
+      const xhr = new XMLHttpRequest();
+      xhr.open(
+        "GET",
+        "http://localhost:3000/api/users/search-by-name?names[]=wand_ota4"
+      );
+      xhr.onerror = (e) => {
+        console.log(e);
+      };
+      xhr.onload = () => {
+        console.log(xhr.response);
+      };
+      xhr.send();
     </script>
   </body>
 </html>

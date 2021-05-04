@@ -1,12 +1,19 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
+
+import api from "@/routes/api";
 import expressWs from "express-ws";
 
 const { app } = expressWs(express());
 
 app.use(express.static("public"));
 
-app.ws("/", function (ws, req) {
-  ws.on("message", function (msg) {
+app.use("/api", api);
+
+app.ws("/ws", (ws, _req) => {
+  ws.on("message", (msg) => {
     console.log(msg);
     ws.send(`reply to ${msg}`);
   });

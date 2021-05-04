@@ -1,10 +1,12 @@
 import express from "express";
-import users from "./users";
 import channels from "./channels";
+import subscriptions from "@/routes/api/subscriptions";
+import users from "./users";
 
 const router = express.Router();
 
-router.use("/users", users);
 router.use("/channels", channels);
+router.use("/subscriptions", subscriptions);
+router.use("/users", users);
 
 export default router;

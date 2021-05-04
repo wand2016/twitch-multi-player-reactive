@@ -57,5 +57,17 @@
       };
       xhr.send();
     </script>
+
+    <script>
+      const xhr2 = new XMLHttpRequest();
+      xhr2.open("GET", "http://localhost:3000/api/subscriptions");
+      xhr2.onerror = (e) => {
+        console.log(e);
+      };
+      xhr2.onload = () => {
+        console.log(xhr2.response);
+      };
+      xhr2.send();
+    </script>
   </body>
 </html>

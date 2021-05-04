@@ -1,14 +1,17 @@
 <template>
-  <iframe
-    v-for="channel in channels"
-    :key="channel"
-    :src="`https://player.twitch.tv/?channel=${channel}&parent=localhost&autoplay=true`"
-    :height="360"
-    :width="640"
-    :allowfullscreen="true"
-    :frameborder="false"
-  >
-  </iframe>
+  <div style="white-space: nowrap">
+    <template v-for="(channel, i) in channels" :key="channel">
+      <iframe
+        :src="`https://player.twitch.tv/?channel=${channel}&parent=localhost&autoplay=true`"
+        :height="layout.unitHeight"
+        :width="layout.unitWidth"
+        :allowfullscreen="true"
+        :frameborder="false"
+      >
+      </iframe>
+      <br v-if="(i + 1) % layout.cols === 0" />
+    </template>
+  </div>
 </template>
 
 <script lang="ts">
@@ -20,6 +23,8 @@ import axios from "axios";
 type QueryParameters = {
   pusherKey: string;
   channels: string[];
+  width: number;
+  height: number;
 };
 
 function parseQueryString(): QueryParameters {
@@ -36,22 +41,19 @@ function parseQueryString(): QueryParameters {
     .concat(parsed["channels"] ?? [])
     .map((ch) => ch.toLowerCase());
 
+  const width = Number(parsed["width"] || window.innerWidth);
+  const height = Number(parsed["height"] || window.innerHeight);
+
   return {
     pusherKey,
     channels,
+    width,
+    height,
   };
 }
 
 // FIXME: 内部表現を暴露しててよくない
 type ChannelVisibility = Record<string, boolean>;
-
-function getChannelNamesFromQueryParameter(): string[] {
-  const parsed = queryString.parse(location.search, {
-    arrayFormat: "comma",
-  });
-
-  return ((parsed["channels"] ?? []) as string[]).map((ch) => ch.toLowerCase());
-}
 
 function usePusher(channelVisibility: ChannelVisibility): Pusher {
   type Notification = {
@@ -121,6 +123,21 @@ async function fetchChannels(): Promise<Channel[]> {
   }));
 }
 
+function calculateLayout(channels: string[]) {
+  const { width, height } = parseQueryString();
+  const rows = Math.ceil(Math.sqrt(channels.length));
+  const cols = rows;
+  const unitWidth = Math.floor(width / cols);
+  const unitHeight = Math.floor(height / rows);
+
+  return {
+    rows,
+    cols,
+    unitWidth,
+    unitHeight,
+  };
+}
+
 export default defineComponent({
   name: "the-players",
   setup() {
@@ -131,6 +148,8 @@ export default defineComponent({
         (name) => channelVisibility[name]
       );
     });
+
+    const layout = computed(() => calculateLayout(channels.value));
 
     usePusher(channelVisibility);
 
@@ -145,6 +164,7 @@ export default defineComponent({
     return {
       channelVisibility,
       channels,
+      layout,
     };
   },
 });

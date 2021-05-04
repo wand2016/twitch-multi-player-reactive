@@ -47,7 +47,7 @@
       const xhr = new XMLHttpRequest();
       xhr.open(
         "GET",
-        "http://localhost:3000/api/users/search-by-name?" + queryToRequest
+        "http://localhost:3000/api/channels/search?" + queryToRequest
       );
       xhr.onerror = (e) => {
         console.log(e);

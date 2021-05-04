@@ -9,7 +9,8 @@
 
     <input type="button" id="sample" value="送信" />
     <script>
-      var sock = new WebSocket("ws://localhost:3000/ws");
+      // TODO: ローカルで動くようにする
+      var sock = new WebSocket("wss://" + window.location.host + "/ws");
 
       // 接続
       sock.addEventListener("open", function (e) {
@@ -45,10 +46,7 @@
       console.log(queryToRequest);
 
       const xhr = new XMLHttpRequest();
-      xhr.open(
-        "GET",
-        "http://localhost:3000/api/channels/search?" + queryToRequest
-      );
+      xhr.open("GET", "/api/channels/search?" + queryToRequest);
       xhr.onerror = (e) => {
         console.log(e);
       };
@@ -60,7 +58,7 @@
 
     <script>
       const xhr2 = new XMLHttpRequest();
-      xhr2.open("GET", "http://localhost:3000/api/subscriptions");
+      xhr2.open("GET", "/api/subscriptions");
       xhr2.onerror = (e) => {
         console.log(e);
       };

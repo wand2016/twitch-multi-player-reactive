@@ -1,5 +1,5 @@
 import express, { Request } from "express";
-import { callback, listSubscriptions, subscribe } from "@/subscriptions";
+import { callback, subscribe } from "@/subscriptions";
 
 const router = express.Router();
 
@@ -7,12 +7,6 @@ type SubscribeRequestParams = {
   channels: string[];
 };
 
-router.get("/", async (req, res) => {
-  const channels = await listSubscriptions();
-  res.send({
-    data: channels,
-  });
-});
 router.post(
   "/",
   async (req: Request<any, any, SubscribeRequestParams>, res) => {

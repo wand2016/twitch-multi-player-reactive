@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
     <title>Title</title>
   </head>
   <body>
@@ -23,34 +24,23 @@
         channels[channelName.toLowerCase()] = false;
       }
 
-      // TODO: ローカルで動くようにする
-      const sock = new WebSocket("wss://" + window.location.host + "/ws");
+      // Enable pusher logging - don't include this in production
+      Pusher.logToConsole = true;
 
-      sock.addEventListener("open", () => {
-        console.log("ws connected");
+      const pusher = new Pusher("xxx", {
+        cluster: "ap3",
       });
 
-      sock.addEventListener("message", (e) => {
-        if (e.data === "pong") {
-          console.log(e.data);
-          return;
+      const channel = pusher.subscribe("my-channel");
+      channel.bind("my-event", (data) => {
+        if (data.notification.type === "stream.online") {
+          channels[data.notification.channel.toLowerCase()] = true;
         }
-
-        const data = JSON.parse(e.data);
-        console.log(data);
-
-        if (data.type === "stream.online") {
-          channels[data.channel.toLowerCase()] = true;
-        }
-        if (data.type === "stream.offline") {
-          channels[data.channel.toLowerCase()] = false;
+        if (data.notification.type === "stream.offline") {
+          channels[data.notification.channel.toLowerCase()] = false;
         }
         console.log("channels:", channels);
       });
-
-      setInterval(() => {
-        sock.send("ping");
-      }, 10000);
 
       const xhr = new XMLHttpRequest();
 

@@ -1,10 +1,12 @@
-import { getWs } from "@/registry";
+import { getWSClient } from "@/websocket";
 
 export type Notification = {
   type: "stream.online" | "stream.offline";
   channel: string;
 };
 
-export function notify(notification: Notification): void {
-  getWs().send(JSON.stringify(notification));
+export async function notify(notification: Notification): Promise<void> {
+  await getWSClient().trigger("my-channel", "my-event", {
+    notification,
+  });
 }

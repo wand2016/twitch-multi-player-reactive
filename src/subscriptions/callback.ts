@@ -1,101 +1,58 @@
 import { notify } from "@/notifications";
+import { ResponseSubscription } from "@/subscriptions/type";
 
-const requestVerificationSample = {
-  challenge: "pogchamp-kappa-360noscope-vohiyo",
-  subscription: {
-    id: "f1c2a387-161a-49f9-a165-0f21d7a4e1c4",
-    status: "webhook_callback_verification_pending",
-    type: "channel.follow",
-    version: "1",
-    cost: 1,
-    condition: {
-      broadcaster_user_id: "12826",
-    },
-    transport: {
-      method: "webhook",
-      callback: "https://example.com/webhooks/callback",
-    },
-    created_at: "2019-11-16T10:11:12.123Z",
-  },
+type CallbackRequestVerification = {
+  challenge: string;
+  subscription: ResponseSubscription;
 };
 
-const requestNotificationOnlineSample = {
-  subscription: {
-    id: "f1c2a387-161a-49f9-a165-0f21d7a4e1c4",
-    type: "stream.online",
-    version: "1",
-    status: "enabled",
-    cost: 0,
-    condition: {
-      broadcaster_user_id: "1337",
-    },
-    transport: {
-      method: "webhook",
-      callback: "https://example.com/webhooks/callback",
-    },
-    created_at: "2019-11-16T10:11:12.123Z",
-  },
+type CallbackRequestNotificationOnline = {
+  subscription: ResponseSubscription & { type: "stream.online" };
   event: {
-    id: "9001",
-    broadcaster_user_id: "1337",
-    broadcaster_user_login: "cool_user",
-    broadcaster_user_name: "Cool_User",
-    type: "live",
-    started_at: "2020-10-11T10:11:12.123Z",
-  },
-} as const;
+    id: string;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+    type: string;
+    started_at: string;
+  };
+};
 
-const requestNotificationOfflineSample = {
-  subscription: {
-    id: "f1c2a387-161a-49f9-a165-0f21d7a4e1c4",
-    type: "stream.offline",
-    version: "1",
-    status: "enabled",
-    cost: 0,
-    condition: {
-      broadcaster_user_id: "1337",
-    },
-    created_at: "2019-11-16T10:11:12.123Z",
-    transport: {
-      method: "webhook",
-      callback: "https://example.com/webhooks/callback",
-    },
-  },
+type CallbackRequestNotificationOffline = {
+  subscription: ResponseSubscription & { type: "stream.offline" };
   event: {
-    broadcaster_user_id: "1337",
-    broadcaster_user_login: "cool_user",
-    broadcaster_user_name: "Cool_User",
-  },
-} as const;
+    broadcaster_user_id: string;
+    broadcaster_user_login: string;
+    broadcaster_user_name: string;
+  };
+};
 
-type RequestVerification = typeof requestVerificationSample;
-type RequestNotificationOnline = typeof requestNotificationOnlineSample;
-type RequestNotificationOffline = typeof requestNotificationOfflineSample;
-
-type Request =
-  | RequestVerification
-  | RequestNotificationOnline
-  | RequestNotificationOffline;
+type CallbackRequest =
+  | CallbackRequestVerification
+  | CallbackRequestNotificationOnline
+  | CallbackRequestNotificationOffline;
 
 function isRequestVerification(
-  request: Request
-): request is RequestVerification {
+  request: CallbackRequest
+): request is CallbackRequestVerification {
   return request.hasOwnProperty("challenge");
 }
 
 function isRequestNotification(
-  request: Request
-): request is RequestNotificationOffline | RequestNotificationOnline {
+  request: CallbackRequest
+): request is
+  | CallbackRequestNotificationOffline
+  | CallbackRequestNotificationOnline {
   return request.hasOwnProperty("event");
 }
 
 // TODO: 署名検証する
-export function callback(req: Request): string {
+export async function callback(req: CallbackRequest): Promise<string> {
   if (isRequestVerification(req)) {
     return req.challenge;
   }
   if (isRequestNotification(req)) {
-    notify({
+    await notify({
       type: req.subscription.type,
       channel: req.event.broadcaster_user_name,
     });

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "serve": "ts-node -r tsconfig-paths/register src/index.ts",
+    "serve": "CALLBACK_ENDPOINT=$(curl -s localhost:4040/api/tunnels | jq -r '.tunnels[1].public_url') ts-node -r tsconfig-paths/register src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

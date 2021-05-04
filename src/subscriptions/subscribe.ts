@@ -46,7 +46,7 @@ async function doSubscribeSingleInternal(
     },
     transport: {
       method: "webhook",
-      callback: `https://${process.env.HOST}/api/subscriptions/callback`,
+      callback: `${process.env.CALLBACK_ENDPOINT}/api/subscriptions/callback`,
       secret: process.env.HMAC_SECRET ?? "",
     },
   };

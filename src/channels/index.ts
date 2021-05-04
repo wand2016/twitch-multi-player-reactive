@@ -33,7 +33,7 @@ const responseSample = {
 type Response = typeof responseSample;
 
 type Channel = {
-  userLoginName: string;
+  name: string;
   isLive: boolean;
 };
 
@@ -52,7 +52,7 @@ export async function findChannelsByUserLoginNames(
 
   return userLoginNames.map((userLoginName) => {
     return {
-      userLoginName,
+      name: userLoginName,
       isLive: response.data.data.some((ch) => ch.user_login === userLoginName),
     };
   });

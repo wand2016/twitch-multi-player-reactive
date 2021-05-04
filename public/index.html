@@ -7,31 +7,6 @@
   <body>
     static
 
-    <input type="button" id="sample" value="送信" />
-    <script>
-      // TODO: ローカルで動くようにする
-      var sock = new WebSocket("wss://" + window.location.host + "/ws");
-
-      // 接続
-      sock.addEventListener("open", function (e) {
-        console.log("Socket 接続成功");
-      });
-
-      // サーバーからデータを受け取る
-      sock.addEventListener("message", function (e) {
-        console.log(e.data);
-      });
-
-      document.addEventListener("DOMContentLoaded", function (e) {
-        // サーバーにデータを送る
-        document
-          .getElementById("sample")
-          .addEventListener("click", function (e) {
-            sock.send("hello");
-          });
-      });
-    </script>
-
     <script>
       const query = Object.fromEntries(
         window.location.search
@@ -40,8 +15,42 @@
           .map((group) => group.split("="))
       );
       console.log(query);
-      const channels = (query["channels"] || "").split(",");
-      console.log(channels);
+      const channelNames = (query["channels"] || "").split(",");
+      console.log(channelNames);
+
+      const channels = {};
+      for (const channelName of channelNames) {
+        channels[channelName.toLowerCase()] = false;
+      }
+
+      // TODO: ローカルで動くようにする
+      const sock = new WebSocket("wss://" + window.location.host + "/ws");
+
+      sock.addEventListener("open", () => {
+        console.log("ws connected");
+      });
+
+      sock.addEventListener("message", (e) => {
+        if (e.data === "pong") {
+          console.log(e.data);
+          return;
+        }
+
+        const data = JSON.parse(e.data);
+        console.log(data);
+
+        if (data.type === "stream.online") {
+          channels[data.channel.toLowerCase()] = true;
+        }
+        if (data.type === "stream.offline") {
+          channels[data.channel.toLowerCase()] = false;
+        }
+        console.log("channels:", channels);
+      });
+
+      setInterval(() => {
+        sock.send("ping");
+      }, 10000);
 
       const xhr = new XMLHttpRequest();
 
@@ -54,18 +63,22 @@
       xhr.onload = () => {
         console.log(xhr.response);
       };
-      console.log("post:", JSON.stringify({ channels }));
-      xhr.send(JSON.stringify({ channels }));
-    </script>
+      xhr.send(JSON.stringify({ channels: channelNames }));
 
-    <script>
       const xhr2 = new XMLHttpRequest();
-      xhr2.open("GET", "/api/subscriptions");
+      const names = channelNames
+        .map((channelName) => "names[]=" + channelName)
+        .join("&");
+      xhr2.open("GET", "/api/channels/search?" + names);
       xhr2.onerror = (e) => {
         console.log(e);
       };
       xhr2.onload = () => {
-        console.log(xhr2.response);
+        console.log(xhr2.responseText);
+        for (const ch of JSON.parse(xhr2.responseText).data) {
+          channels[ch.name.toLowerCase()] = ch.isLive;
+        }
+        console.log("channels(initial):", channels);
       };
       xhr2.send();
     </script>

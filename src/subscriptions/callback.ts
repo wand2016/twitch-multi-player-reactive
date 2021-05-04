@@ -1,4 +1,4 @@
-import { getWs } from "@/registry";
+import { notify } from "@/notifications";
 
 const requestVerificationSample = {
   challenge: "pogchamp-kappa-360noscope-vohiyo",
@@ -43,7 +43,7 @@ const requestNotificationOnlineSample = {
     type: "live",
     started_at: "2020-10-11T10:11:12.123Z",
   },
-};
+} as const;
 
 const requestNotificationOfflineSample = {
   subscription: {
@@ -66,7 +66,7 @@ const requestNotificationOfflineSample = {
     broadcaster_user_login: "cool_user",
     broadcaster_user_name: "Cool_User",
   },
-};
+} as const;
 
 type RequestVerification = typeof requestVerificationSample;
 type RequestNotificationOnline = typeof requestNotificationOnlineSample;
@@ -85,7 +85,7 @@ function isRequestVerification(
 
 function isRequestNotification(
   request: Request
-): request is RequestVerification {
+): request is RequestNotificationOffline | RequestNotificationOnline {
   return request.hasOwnProperty("event");
 }
 
@@ -95,10 +95,13 @@ export function callback(req: Request): string {
     return req.challenge;
   }
   if (isRequestNotification(req)) {
-    const ws = getWs();
-    ws.send(`notification has come!! ${req.event.broadcaster_user_name}`);
+    notify({
+      type: req.subscription.type,
+      channel: req.event.broadcaster_user_name,
+    });
     return "";
   }
 
-  return "";
+  console.error(req);
+  throw new Error("unhandled callback request");
 }

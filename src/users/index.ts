@@ -24,25 +24,14 @@ type Response = {
   data: ResponseUser[];
 };
 
-export async function findUserNamesByUserIds(
-  userIds: string[]
-): Promise<string[]> {
-  const axios = getAxiosInstance();
+export type User = {
+  id: string;
+  name: string;
+};
 
-  const params: QueryParameter = {
-    id: userIds,
-  };
-
-  const response = await axios.get<Response>("helix/users", {
-    params,
-  });
-
-  return response.data.data.map(({ login }) => login);
-}
-
-export async function findUserIdsByUserNames(
+export async function findUsersByUserNames(
   userNames: string[]
-): Promise<string[]> {
+): Promise<User[]> {
   const axios = getAxiosInstance();
 
   const params: QueryParameter = {
@@ -53,5 +42,8 @@ export async function findUserIdsByUserNames(
     params,
   });
 
-  return response.data.data.map(({ id }) => id);
+  return response.data.data.map(({ login, id }) => ({
+    name: login,
+    id,
+  }));
 }

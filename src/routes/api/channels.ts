@@ -1,5 +1,4 @@
 import express, { Request } from "express";
-import { findUserIdsByUserNames } from "@/users";
 import { findChannelsByUserLoginNames } from "@/channels";
 
 const router = express.Router();

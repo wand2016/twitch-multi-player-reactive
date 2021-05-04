@@ -16,10 +16,7 @@ router.get("/", async (req, res) => {
 router.post(
   "/",
   async (req: Request<any, any, SubscribeRequestParams>, res) => {
-    console.log(req.body);
-    const result = await subscribe(req.body.channels ?? []);
-    console.log(result, "result of subscribe (sync)");
-
+    await subscribe(req.body.channels ?? []);
     res.send("sub ok");
   }
 );
@@ -29,7 +26,9 @@ router.post("/callback", async (req, res) => {
   const challenge = await callback(req.body);
 
   res.header("Content-Type", "text/plain;charset=utf-8");
-  res.send(challenge);
+  res.end(challenge);
+
+  console.log(`returned challenge ${challenge}`);
 });
 
 export default router;

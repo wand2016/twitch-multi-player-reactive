@@ -1,5 +1,5 @@
 import getAxiosInstance from "@/axios";
-import { findUserIdsByUserNames } from "@/users";
+import { findUsersByUserNames, User } from "@/users";
 
 const requestSample = {
   type: "channel.follow",
@@ -42,15 +42,31 @@ const responseSample = {
 type Response = typeof responseSample;
 
 export async function subscribe(channels: string[]) {
-  const userIds = await findUserIdsByUserNames(channels);
+  const users = await findUsersByUserNames(channels);
 
+  const types = ["stream.online", "stream.offline"];
+  const promises: Promise<unknown>[] = [];
+
+  for (const channel of channels) {
+    for (const type of types) {
+      promises.push(trySubscribeSingle(users, channel, type));
+    }
+  }
+
+  await Promise.all(promises);
+}
+
+async function doSubscribeSingleInternal(
+  userId: string,
+  type: string
+): Promise<void> {
   const axios = getAxiosInstance();
 
   const params: RequestBody = {
-    type: "stream.online",
+    type,
     version: "1",
     condition: {
-      broadcaster_user_id: userIds[0],
+      broadcaster_user_id: userId,
     },
     transport: {
       method: "webhook",
@@ -60,16 +76,24 @@ export async function subscribe(channels: string[]) {
     },
   };
 
-  try {
-    const response = await axios.post<Response>(
-      "helix/eventsub/subscriptions",
-      params
-    );
-    console.log(response);
+  await axios.post<Response>("helix/eventsub/subscriptions", params);
+}
 
-    return response;
+async function trySubscribeSingle(
+  users: User[],
+  channel: string,
+  type: string
+): Promise<void> {
+  const userId = users.find(({ name }) => name === channel)?.id ?? "";
+
+  try {
+    await doSubscribeSingleInternal(userId, type);
   } catch (e) {
-    console.log(e.response);
+    if (e?.response?.status === 409) {
+      console.log("already registered:", { channel, userId, type });
+      return;
+    }
+
     throw e;
   }
 }

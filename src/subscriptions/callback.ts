@@ -1,3 +1,5 @@
+import { getWs } from "@/registry";
+
 const requestVerificationSample = {
   challenge: "pogchamp-kappa-360noscope-vohiyo",
   subscription: {
@@ -17,15 +19,15 @@ const requestVerificationSample = {
   },
 };
 
-const requestNotificationSample = {
+const requestNotificationOnlineSample = {
   subscription: {
     id: "f1c2a387-161a-49f9-a165-0f21d7a4e1c4",
-    status: "enabled",
-    type: "channel.follow",
+    type: "stream.online",
     version: "1",
-    cost: 1,
+    status: "enabled",
+    cost: 0,
     condition: {
-      broadcaster_user_id: "12826",
+      broadcaster_user_id: "1337",
     },
     transport: {
       method: "webhook",
@@ -34,19 +36,46 @@ const requestNotificationSample = {
     created_at: "2019-11-16T10:11:12.123Z",
   },
   event: {
-    user_id: "1337",
-    user_login: "awesome_user",
-    user_name: "Awesome_User",
-    broadcaster_user_id: "12826",
-    broadcaster_user_login: "twitch",
-    broadcaster_user_name: "Twitch",
+    id: "9001",
+    broadcaster_user_id: "1337",
+    broadcaster_user_login: "cool_user",
+    broadcaster_user_name: "Cool_User",
+    type: "live",
+    started_at: "2020-10-11T10:11:12.123Z",
+  },
+};
+
+const requestNotificationOfflineSample = {
+  subscription: {
+    id: "f1c2a387-161a-49f9-a165-0f21d7a4e1c4",
+    type: "stream.offline",
+    version: "1",
+    status: "enabled",
+    cost: 0,
+    condition: {
+      broadcaster_user_id: "1337",
+    },
+    created_at: "2019-11-16T10:11:12.123Z",
+    transport: {
+      method: "webhook",
+      callback: "https://example.com/webhooks/callback",
+    },
+  },
+  event: {
+    broadcaster_user_id: "1337",
+    broadcaster_user_login: "cool_user",
+    broadcaster_user_name: "Cool_User",
   },
 };
 
 type RequestVerification = typeof requestVerificationSample;
-type RequestNotification = typeof requestNotificationSample;
+type RequestNotificationOnline = typeof requestNotificationOnlineSample;
+type RequestNotificationOffline = typeof requestNotificationOfflineSample;
 
-type Request = RequestVerification | RequestNotification;
+type Request =
+  | RequestVerification
+  | RequestNotificationOnline
+  | RequestNotificationOffline;
 
 function isRequestVerification(
   request: Request
@@ -66,6 +95,8 @@ export function callback(req: Request): string {
     return req.challenge;
   }
   if (isRequestNotification(req)) {
+    const ws = getWs();
+    ws.send(`notification has come!! ${req.event.broadcaster_user_name}`);
     return "";
   }
 

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { onFulfilled as addCredentials } from "@bff/axios/interceptors/oauth";
+import { createOAuthInterceptor } from "@bff/axios/interceptors/oauth";
 
 function createAxiosInstance() {
   const ret = axios.create({
@@ -7,7 +7,12 @@ function createAxiosInstance() {
     baseURL: "https://api.twitch.tv/",
   });
 
-  ret.interceptors.request.use(addCredentials);
+  const { onFulfilled } = createOAuthInterceptor({
+    clientId: process.env.CLIENT_ID ?? "",
+    clientSecret: process.env.CLIENT_SECRET ?? "",
+  });
+
+  ret.interceptors.request.use(onFulfilled);
 
   return ret;
 }

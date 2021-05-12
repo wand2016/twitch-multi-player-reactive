@@ -5,24 +5,41 @@ type OnFulfilled<V = AxiosRequestConfig> = Parameters<
   AxiosInterceptorManager<V>["use"]
 >[0];
 
+type Interceptor = {
+  onFulfilled: OnFulfilled;
+};
+
+type Credentials = {
+  clientId: string;
+  clientSecret: string;
+};
+
 /**
- * Bearerトークンを載せる
+ * Bearerトークンを載せるinterceptorを作成
  */
-export const onFulfilled: OnFulfilled = async (req) => {
-  if (req.headers["Authorization"]) {
-    return req;
-  }
+export const createOAuthInterceptor = (
+  credentials: Credentials
+): Interceptor => {
+  return {
+    async onFulfilled(req) {
+      if (req.headers["Authorization"]) {
+        return req;
+      }
 
-  req.headers["Client-Id"] = process.env.CLIENT_ID;
-  req.headers["Authorization"] = `Bearer ${await getClientCredentials()}`;
+      req.headers["Client-Id"] = credentials.clientId;
+      req.headers["Authorization"] = `Bearer ${await fetchBearerToken(
+        credentials
+      )}`;
 
-  return req;
+      return req;
+    },
+  };
 };
 
 /**
  * @see https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-client-credentials-flow
  */
-async function getClientCredentials() {
+async function fetchBearerToken(credentials: Credentials): Promise<string> {
   type ResponseCredentials = {
     access_token: string;
     refresh_token: string;
@@ -36,8 +53,8 @@ async function getClientCredentials() {
     {},
     {
       params: {
-        client_id: process.env.CLIENT_ID,
-        client_secret: process.env.CLIENT_SECRET,
+        client_id: credentials.clientId,
+        client_secret: credentials.clientSecret,
         grant_type: "client_credentials",
       },
     }

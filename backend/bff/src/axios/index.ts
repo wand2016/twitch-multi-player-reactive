@@ -1,5 +1,5 @@
 import axios from "axios";
-import { createOAuthInterceptor } from "@bff/axios/interceptors/oauth";
+import { createOAuthInterceptor } from "@lib/axios/interceptors/oauth";
 
 function createAxiosInstance() {
   const ret = axios.create({

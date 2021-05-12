@@ -1,12 +1,12 @@
 import getAxiosInstance from "@bff/axios";
-import { ResponseSubscriptions } from "@lib/types/schema";
-
-type Response = ResponseSubscriptions;
+import { components } from "@lib/types/schema-twitch";
 
 export async function deleteSubscriptions(): Promise<void> {
   const axios = getAxiosInstance();
 
-  const response = await axios.get<Response>("helix/eventsub/subscriptions");
+  const response = await axios.get<
+    components["schemas"]["SubscriptionPagination"]
+  >("helix/eventsub/subscriptions");
   const ids = response.data.data.map(({ id }) => id);
 
   // バルク指定できないっぽい

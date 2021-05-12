@@ -1,27 +1,13 @@
 import getAxiosInstance from "@bff/axios";
 import { findUsersByUserNames, User } from "@bff/users";
-import { ResponseSubscriptions } from "@lib/types/schema";
-
-type RequestBody = {
-  type: string;
-  version: string;
-  condition: {
-    broadcaster_user_id: string;
-  };
-  transport: {
-    method: "webhook";
-    callback: string;
-    secret: string;
-  };
-};
-
-type Response = ResponseSubscriptions;
+import { components } from "@lib/types/schema-twitch";
 
 export async function subscribe(channels: string[]) {
   const users = await findUsersByUserNames(channels);
 
-  const types = ["stream.online", "stream.offline"];
   const promises: Promise<unknown>[] = [];
+
+  const types = ["stream.online", "stream.offline"] as const;
 
   for (const channel of channels) {
     for (const type of types) {
@@ -34,11 +20,11 @@ export async function subscribe(channels: string[]) {
 
 async function doSubscribeSingleInternal(
   userId: string,
-  type: string
+  type: components["schemas"]["SubscriptionType"]
 ): Promise<void> {
   const axios = getAxiosInstance();
 
-  const params: RequestBody = {
+  const params: components["schemas"]["SubscriptionToPost"] = {
     type,
     version: "1",
     condition: {
@@ -57,7 +43,7 @@ async function doSubscribeSingleInternal(
 async function trySubscribeSingle(
   users: User[],
   channel: string,
-  type: string
+  type: components["schemas"]["SubscriptionType"]
 ): Promise<void> {
   const userId = users.find(({ name }) => name === channel)?.id ?? "";
 

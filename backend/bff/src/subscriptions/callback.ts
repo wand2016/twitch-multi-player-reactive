@@ -1,62 +1,38 @@
 import { notify } from "@bff/notifications";
-import { ResponseSubscription } from "@lib/types/schema";
-
-type CallbackRequestVerification = {
-  challenge: string;
-  subscription: ResponseSubscription;
-};
-
-type CallbackRequestNotificationOnline = {
-  subscription: ResponseSubscription & { type: "stream.online" };
-  event: {
-    id: string;
-    broadcaster_user_id: string;
-    broadcaster_user_login: string;
-    broadcaster_user_name: string;
-    type: string;
-    started_at: string;
-  };
-};
-
-type CallbackRequestNotificationOffline = {
-  subscription: ResponseSubscription & { type: "stream.offline" };
-  event: {
-    broadcaster_user_id: string;
-    broadcaster_user_login: string;
-    broadcaster_user_name: string;
-  };
-};
-
-type CallbackRequest =
-  | CallbackRequestVerification
-  | CallbackRequestNotificationOnline
-  | CallbackRequestNotificationOffline;
+import { components } from "@lib/types/schema-twitch";
 
 function isRequestVerification(
-  request: CallbackRequest
-): request is CallbackRequestVerification {
+  request: components["schemas"]["CallbackRequestBody"]
+): request is components["schemas"]["VerificationRequestBody"] {
   return request.hasOwnProperty("challenge");
 }
 
 function isRequestNotification(
-  request: CallbackRequest
-): request is
-  | CallbackRequestNotificationOffline
-  | CallbackRequestNotificationOnline {
+  request: components["schemas"]["CallbackRequestBody"]
+): request is components["schemas"]["Notification"] {
   return request.hasOwnProperty("event");
 }
 
 // TODO: 署名検証する
-export async function callback(req: CallbackRequest): Promise<string> {
+export async function callback(
+  req: components["schemas"]["CallbackRequestBody"]
+): Promise<string> {
   if (isRequestVerification(req)) {
     return req.challenge;
   }
   if (isRequestNotification(req)) {
-    await notify({
-      type: req.subscription.type,
-      channel: req.event.broadcaster_user_name,
-    });
-    return "";
+    switch (req.subscription.type) {
+      case "stream.offline":
+      case "stream.online":
+        await notify({
+          type: req.subscription.type,
+          channel: req.event.broadcaster_user_name ?? "",
+        });
+
+        return "";
+      default:
+        return "";
+    }
   }
 
   console.error(req);

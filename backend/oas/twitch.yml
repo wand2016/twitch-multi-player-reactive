@@ -1,0 +1,381 @@
+openapi: 3.0.1
+info:
+  title: Twitch API
+  contact:
+    email: d19921207@gmail.com
+  version: 1.0.0
+externalDocs:
+  url: https://dev.twitch.tv/docs/api
+servers:
+  - url: https://api.twitch.tv/helix
+tags:
+  - name: subscription
+    description: EventSub
+    externalDocs:
+      url: https://dev.twitch.tv/docs/eventsub
+paths:
+  /eventsub/subscriptions:
+    get:
+      tags:
+        - subscription
+      summary: list event subscriptions
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionPagination'
+    post:
+      tags:
+        - subscription
+      summary: Create an event subscription
+      requestBody:
+        description: Subscription
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionToPost'
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionPagination'
+    delete:
+      tags:
+        - subscription
+      summary: Create an event subscription
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: string
+            example: "f1c2a387-161a-49f9-a165-0f21d7a4e1c4"
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+  /example/callback-handshake:
+    post:
+      tags:
+        - subscription
+      summary: subscription callback (handshake)
+      requestBody:
+        description: Challenge
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationRequestBody'
+      responses:
+        200:
+          description: Challenge Response
+          headers:
+            Twitch-Eventsub-Message-Id:
+              $ref: '#/components/headers/Twitch-Eventsub-Message-Id'
+            Twitch-Eventsub-Message-Timestamp:
+              $ref: '#/components/headers/Twitch-Eventsub-Message-Timestamp'
+            Twitch-Eventsub-Message-Signature:
+              $ref: '#/components/headers/Twitch-Eventsub-Message-Signature'
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/VerificationResponseBody'
+  /example/callback-notification:
+    post:
+      tags:
+        - subscription
+      summary: subscription callback (notification)
+      requestBody:
+        description: Notification
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+      responses:
+        200:
+          description: successful operation
+          headers:
+            Twitch-Eventsub-Message-Id:
+              $ref: '#/components/headers/Twitch-Eventsub-Message-Id'
+            Twitch-Eventsub-Message-Timestamp:
+              $ref: '#/components/headers/Twitch-Eventsub-Message-Timestamp'
+            Twitch-Eventsub-Message-Signature:
+              $ref: '#/components/headers/Twitch-Eventsub-Message-Signature'
+          content:
+            application/json:
+              schema:
+                type: object
+components:
+  schemas:
+    Condition:
+      type: object
+      properties:
+        broadcaster_user_id:
+          type: string
+          example: "12826"
+
+    TransportCommon:
+      type: object
+      required:
+        - method
+        - callback
+      properties:
+        method:
+          type: string
+          enum:
+            - "webhook"
+        callback:
+          type: string
+          example: "https://example.com/webhooks/callback"
+          description: "valid https URI"
+    TransportToGet:
+      $ref: '#/components/schemas/TransportCommon'
+    TransportToPost:
+      allOf:
+        - $ref: '#/components/schemas/TransportCommon'
+        - type: object
+          required:
+            - secret
+          properties:
+            secret:
+              type: string
+              example: "s3cRe7"
+              description: "shared secret for HMAC-SHA256"
+
+    SubscriptionType:
+      type: string
+      enum:
+        - "channel.follow"
+        - "stream.online"
+        - "stream.offline"
+
+    SubscriptionCommon:
+      type: object
+      required:
+        - type
+        - version
+        - condition
+      properties:
+        type:
+          $ref: '#/components/schemas/SubscriptionType'
+        version:
+          type: string
+          example: "1"
+        condition:
+          $ref: '#/components/schemas/Condition'
+    SubscriptionToPost:
+      allOf:
+        - $ref: '#/components/schemas/SubscriptionCommon'
+        - type: object
+          required:
+            - transport
+          properties:
+            transport:
+              $ref: '#/components/schemas/TransportToPost'
+    SubscriptionToGet:
+      allOf:
+        - $ref: '#/components/schemas/SubscriptionCommon'
+        - type: object
+          properties:
+            id:
+              type: string
+              example: "f1c2a387-161a-49f9-a165-0f21d7a4e1c4"
+            status:
+              type: string
+              enum:
+                - "enabled"
+                - "webhook_callback_verification_pending"
+                - "webhook_callback_verification_failed"
+                - "notification_failures_exceeded"
+                - "authorization_revoked"
+                - "user_removed"
+            cost:
+              type: integer
+              example: 1
+            transport:
+              $ref: '#/components/schemas/TransportToGet'
+            created_at:
+              type: string
+              format: date-time
+          required:
+            - id
+            - status
+            - cost
+            - transport
+            - created_at
+    SubscriptionPagination:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/SubscriptionToGet'
+          required:
+            - data
+
+    Challenge:
+      type: string
+      example: "pogchamp-kappa-360noscope-vohiyo"
+    VerificationRequestBody:
+      type: object
+      properties:
+        challenge:
+          $ref: '#/components/schemas/Challenge'
+        subscription:
+          $ref: '#/components/schemas/SubscriptionToGet'
+      required:
+        - challenge
+        - subscription
+    VerificationResponseBody:
+      $ref: '#/components/schemas/Challenge'
+    Notification:
+      type: object
+      properties:
+        subscription:
+          $ref: '#/components/schemas/SubscriptionToGet'
+        event:
+          $ref: '#/components/schemas/Event'
+      required:
+        - subscription
+        - event
+    CallbackRequestBody:
+      anyOf:
+        - $ref: '#/components/schemas/VerificationRequestBody'
+        - $ref: '#/components/schemas/Notification'
+
+    Event:
+      anyOf:
+        - $ref: '#/components/schemas/EventChannelFollow'
+        - $ref: '#/components/schemas/EventStreamOnline'
+        - $ref: '#/components/schemas/EventStreamOffline'
+
+    EventChannelFollow:
+      type: object
+      properties:
+        user_id:
+          type: string
+          example: "1234"
+        user_login:
+          type: string
+          example: "cool_user"
+        user_name:
+          type: string
+          example: "Cool_User"
+        broadcaster_user_id:
+          type: string
+          example: "1337"
+        broadcaster_user_login:
+          type: string
+          example: "cooler_user"
+        broadcaster_user_name:
+          type: string
+          example: "Cooler_User"
+        followed_at:
+          type: string
+          format: date-time
+      required:
+        - user_id
+        - user_login
+        - user_name
+        - broadcaster_user_id
+        - broadcaster_user_login
+        - broadcaster_user_name
+        - followed_at
+    EventStreamOnline:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "9001"
+          description: "the id of the stream"
+        broadcaster_user_id:
+          type: string
+          example: "1337"
+        broadcaster_user_login:
+          type: string
+          example: "cool_user"
+        broadcaster_user_name:
+          type: string
+          example: "Cool_User"
+        type:
+          type: string
+          enum:
+            - "live"
+            - "playlist"
+            - "watch_party"
+            - "premiere"
+            - "rerun"
+        started_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - broadcaster_user_id
+        - broadcaster_user_login
+        - broadcaster_user_name
+        - type
+        - started_at
+    EventStreamOffline:
+      type: object
+      properties:
+        broadcaster_user_id:
+          type: string
+          example: "1337"
+        broadcaster_user_login:
+          type: string
+          example: "cool_user"
+        broadcaster_user_name:
+          type: string
+          example: "Cool_User"
+      required:
+        - broadcaster_user_id
+        - broadcaster_user_login
+        - broadcaster_user_name
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 1
+        total_cost:
+          type: integer
+          example: 1
+        max_total_cost:
+          type: integer
+          example: 10000
+        limit:
+          type: integer
+          example: 10000
+      required:
+        - total
+        - total_cost
+        - max_total_cost
+        - limit
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  headers:
+    Twitch-Eventsub-Message-Id:
+      schema:
+        type: string
+    Twitch-Eventsub-Message-Timestamp:
+      schema:
+        type: string
+    Twitch-Eventsub-Message-Signature:
+      schema:
+        type: string
+      description: HMAC-SHA256 signature of Id + Timestamp + Body
+
+security:
+  - bearerAuth: []

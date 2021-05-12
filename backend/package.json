@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "generate:schema": "npx openapi-typescript oas/twitch.yml --output lib/src/types/schema-twitch.ts",
     "serve:bff": "ts-node -r tsconfig-paths/register bff/src/index.ts",
     "serve:callback": "CALLBACK_ENDPOINT=$(curl -s localhost:4040/api/tunnels | jq -r '.tunnels[].public_url' | grep -e 'https.*') ts-node -r tsconfig-paths/register callback/src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"

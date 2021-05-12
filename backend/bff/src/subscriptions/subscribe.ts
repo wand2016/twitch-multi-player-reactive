@@ -1,6 +1,6 @@
-import getAxiosInstance from "@/axios";
-import { findUsersByUserNames, User } from "@/users";
-import { ResponseSubscriptions } from "@/subscriptions/type";
+import getAxiosInstance from "@bff/axios";
+import { findUsersByUserNames, User } from "@bff/users";
+import { ResponseSubscriptions } from "@bff/subscriptions/type";
 
 type RequestBody = {
   type: string;

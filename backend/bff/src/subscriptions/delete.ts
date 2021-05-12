@@ -1,5 +1,5 @@
-import getAxiosInstance from "@/axios";
-import { ResponseSubscriptions } from "@/subscriptions/type";
+import getAxiosInstance from "@bff/axios";
+import { ResponseSubscriptions } from "@bff/subscriptions/type";
 
 type Response = ResponseSubscriptions;
 

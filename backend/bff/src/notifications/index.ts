@@ -1,4 +1,4 @@
-import { getWSClient } from "@/websocket";
+import { getWSClient } from "@bff/websocket";
 
 export type Notification = {
   type: "stream.online" | "stream.offline";

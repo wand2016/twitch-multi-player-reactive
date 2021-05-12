@@ -1,5 +1,5 @@
 import axios from "axios";
-import { onFulfilled as addCredentials } from "@/axios/interceptors/oauth";
+import { onFulfilled as addCredentials } from "@bff/axios/interceptors/oauth";
 
 function createAxiosInstance() {
   const ret = axios.create({

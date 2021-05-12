@@ -1,5 +1,5 @@
 import express, { Request } from "express";
-import { findChannelsByUserLoginNames } from "@/channels";
+import { findChannelsByUserLoginNames } from "@bff/channels";
 
 const router = express.Router();
 

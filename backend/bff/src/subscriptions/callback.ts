@@ -1,5 +1,5 @@
-import { notify } from "@/notifications";
-import { ResponseSubscription } from "@/subscriptions/type";
+import { notify } from "@bff/notifications";
+import { ResponseSubscription } from "@bff/subscriptions/type";
 
 type CallbackRequestVerification = {
   challenge: string;

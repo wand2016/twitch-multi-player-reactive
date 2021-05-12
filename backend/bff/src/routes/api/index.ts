@@ -1,6 +1,6 @@
 import express from "express";
 import channels from "./channels";
-import subscriptions from "@/routes/api/subscriptions";
+import subscriptions from "@bff/routes/api/subscriptions";
 
 const router = express.Router();
 

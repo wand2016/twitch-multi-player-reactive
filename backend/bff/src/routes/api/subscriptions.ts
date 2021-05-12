@@ -1,5 +1,5 @@
 import express, { Request } from "express";
-import { callback, subscribe } from "@/subscriptions";
+import { callback, subscribe } from "@bff/subscriptions";
 
 const router = express.Router();
 

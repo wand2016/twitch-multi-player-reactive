@@ -1,4 +1,4 @@
-import getAxiosInstance from "@/axios";
+import getAxiosInstance from "@bff/axios";
 
 type QueryParameter = {
   user_login: string[];

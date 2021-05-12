@@ -3,7 +3,7 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
-import api from "@/routes/api";
+import api from "@bff/routes/api";
 
 const app = express();
 
@@ -16,7 +16,7 @@ app.use(express.static("public"));
 app.use("/api", api);
 
 // for debug
-import { deleteSubscriptions } from "@/subscriptions";
+import { deleteSubscriptions } from "@bff/subscriptions";
 (async () => {
   await deleteSubscriptions();
   console.log("deleted all subs");

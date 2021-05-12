@@ -1,5 +1,5 @@
 import { notify } from "@bff/notifications";
-import { ResponseSubscription } from "@bff/subscriptions/type";
+import { ResponseSubscription } from "@lib/types/schema";
 
 type CallbackRequestVerification = {
   challenge: string;

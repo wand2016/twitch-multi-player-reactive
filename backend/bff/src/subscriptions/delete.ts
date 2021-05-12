@@ -1,5 +1,5 @@
 import getAxiosInstance from "@bff/axios";
-import { ResponseSubscriptions } from "@bff/subscriptions/type";
+import { ResponseSubscriptions } from "@lib/types/schema";
 
 type Response = ResponseSubscriptions;
 

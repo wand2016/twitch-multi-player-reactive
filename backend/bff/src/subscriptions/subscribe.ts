@@ -1,6 +1,6 @@
 import getAxiosInstance from "@bff/axios";
 import { findUsersByUserNames, User } from "@bff/users";
-import { ResponseSubscriptions } from "@bff/subscriptions/type";
+import { ResponseSubscriptions } from "@lib/types/schema";
 
 type RequestBody = {
   type: string;

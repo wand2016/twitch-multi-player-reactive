@@ -1,3 +1,4 @@
+// TODO: swaggerとかから生成したい
 export type ResponseSubscription = {
   id: string;
   status: string;

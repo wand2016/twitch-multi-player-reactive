@@ -69,6 +69,8 @@ async function trySubscribeSingle(
       return;
     }
 
+    console.warn(e);
+
     throw e;
   }
 }

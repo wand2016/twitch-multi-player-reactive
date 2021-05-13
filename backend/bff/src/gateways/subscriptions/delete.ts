@@ -1,4 +1,4 @@
-import getAxiosInstance from "@bff/axios";
+import getAxiosInstance from "@bff/gateways/axios";
 import { components } from "@lib/types/schema-twitch";
 
 export async function deleteSubscriptions(): Promise<void> {

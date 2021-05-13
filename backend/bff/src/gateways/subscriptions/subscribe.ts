@@ -1,5 +1,5 @@
-import getAxiosInstance from "@bff/axios";
-import { findUsersByUserNames, User } from "@bff/users";
+import getAxiosInstance from "@bff/gateways/axios";
+import { findUsersByUserNames, User } from "@bff/gateways/users";
 import { components } from "@lib/types/schema-twitch";
 
 export async function subscribe(channels: string[]) {

@@ -1,4 +1,4 @@
-import getAxiosInstance from "@bff/axios";
+import getAxiosInstance from "@bff/gateways/axios";
 
 import { components, paths } from "@lib/types/schema-twitch";
 

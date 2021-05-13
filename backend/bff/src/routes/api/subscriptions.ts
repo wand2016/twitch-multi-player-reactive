@@ -1,5 +1,5 @@
 import express, { Request } from "express";
-import { subscribe } from "@bff/subscriptions";
+import { subscribe } from "@bff/gateways/subscriptions";
 
 const router = express.Router();
 

@@ -16,7 +16,7 @@ app.use(express.static("public"));
 app.use("/api", api);
 
 // for debug
-import { deleteSubscriptions } from "@bff/subscriptions";
+import { deleteSubscriptions } from "@bff/gateways/subscriptions";
 (async () => {
   await deleteSubscriptions();
   console.log("deleted all subs");

@@ -5,7 +5,7 @@ export async function deleteSubscriptions(): Promise<void> {
   const axios = getAxiosInstance();
 
   const response = await axios.get<
-    components["schemas"]["SubscriptionPagination"]
+    components["schemas"]["SubscriptionListWithCost"]
   >("helix/eventsub/subscriptions");
   const ids = response.data.data.map(({ id }) => id);
 

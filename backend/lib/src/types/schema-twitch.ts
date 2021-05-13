@@ -4,13 +4,54 @@
  */
 
 export interface paths {
+  "/streams": {
+    get: {
+      parameters: {
+        query: {
+          after?: string;
+          before?: string;
+          first?: number;
+          game_id?: string[];
+          language?: string[];
+          user_id?: string[];
+          user_login?: string[];
+        };
+      };
+      responses: {
+        /** successful operation */
+        200: {
+          content: {
+            "application/json": components["schemas"]["StreamPagination"];
+          };
+        };
+      };
+    };
+  };
+  "/users": {
+    get: {
+      parameters: {
+        query: {
+          id?: string[];
+          login?: string[];
+        };
+      };
+      responses: {
+        /** successful operation */
+        200: {
+          content: {
+            "application/json": components["schemas"]["UserList"];
+          };
+        };
+      };
+    };
+  };
   "/eventsub/subscriptions": {
     get: {
       responses: {
         /** successful operation */
         200: {
           content: {
-            "application/json": components["schemas"]["SubscriptionPagination"];
+            "application/json": components["schemas"]["SubscriptionListWithCost"];
           };
         };
       };
@@ -20,7 +61,7 @@ export interface paths {
         /** successful operation */
         200: {
           content: {
-            "application/json": components["schemas"]["SubscriptionPagination"];
+            "application/json": components["schemas"]["SubscriptionListWithCost"];
           };
         };
       };
@@ -89,26 +130,87 @@ export interface paths {
 
 export interface components {
   schemas: {
+    CallbackRequestBody: (Partial<
+      components["schemas"]["VerificationRequestBody"]
+    > &
+      Partial<components["schemas"]["Notification"]>) & { [key: string]: any };
+    Challenge: string;
     Condition: {
       broadcaster_user_id?: string;
     } & { [key: string]: any };
-    TransportCommon: {
-      method: "webhook";
-      /** valid https URI */
-      callback: string;
+    Event: (Partial<components["schemas"]["EventChannelFollow"]> &
+      Partial<components["schemas"]["EventStreamOffline"]> &
+      Partial<components["schemas"]["EventStreamOnline"]>) & {
+      [key: string]: any;
+    };
+    EventChannelFollow: {
+      user_id: string;
+      user_login: string;
+      user_name: string;
+      broadcaster_user_id: string;
+      broadcaster_user_login: string;
+      broadcaster_user_name: string;
+      followed_at: string;
     } & { [key: string]: any };
-    TransportToGet: components["schemas"]["TransportCommon"];
-    TransportToPost: components["schemas"]["TransportCommon"] &
+    EventStreamOffline: {
+      broadcaster_user_id: string;
+      broadcaster_user_login: string;
+      broadcaster_user_name: string;
+    } & { [key: string]: any };
+    EventStreamOnline: {
+      /** the id of the stream */
+      id: string;
+      broadcaster_user_id: string;
+      broadcaster_user_login: string;
+      broadcaster_user_name: string;
+      type: "live" | "playlist" | "watch_party" | "premiere" | "rerun";
+      started_at: string;
+    } & { [key: string]: any };
+    ListWithCost: {
+      total: number;
+      total_cost: number;
+      max_total_cost: number;
+      limit: number;
+    } & { [key: string]: any };
+    Notification: {
+      subscription: components["schemas"]["SubscriptionToGet"];
+      event: components["schemas"]["Event"];
+    } & { [key: string]: any };
+    Pagination: {
+      pagination: {
+        cursor: string;
+      } & { [key: string]: any };
+    } & { [key: string]: any };
+    Stream: {
+      id: string;
+      user_id: string;
+      user_login: string;
+      user_name: string;
+      game_id: string;
+      game_name: string;
+      /** empty in case of error */
+      type: "live" | "";
+      title: string;
+      viewer_count: number;
+      started_at: string;
+      language: string;
+      thumbnail_url: string;
+      tag_ids: string[];
+      is_mature: boolean;
+    } & { [key: string]: any };
+    StreamPagination: components["schemas"]["Pagination"] &
       ({
-        /** shared secret for HMAC-SHA256 */
-        secret: string;
+        data: components["schemas"]["Stream"][];
       } & { [key: string]: any }) & { [key: string]: any };
-    SubscriptionType: "channel.follow" | "stream.online" | "stream.offline";
     SubscriptionCommon: {
       type: components["schemas"]["SubscriptionType"];
       version: string;
       condition: components["schemas"]["Condition"];
     } & { [key: string]: any };
+    SubscriptionListWithCost: components["schemas"]["ListWithCost"] &
+      ({
+        data: components["schemas"]["SubscriptionToGet"][];
+      } & { [key: string]: any }) & { [key: string]: any };
     SubscriptionToPost: components["schemas"]["SubscriptionCommon"] &
       ({
         transport: components["schemas"]["TransportToPost"];
@@ -127,58 +229,39 @@ export interface components {
         transport: components["schemas"]["TransportToGet"];
         created_at: string;
       } & { [key: string]: any }) & { [key: string]: any };
-    SubscriptionPagination: components["schemas"]["Pagination"] &
+    SubscriptionType: "channel.follow" | "stream.online" | "stream.offline";
+    TransportCommon: {
+      method: "webhook";
+      /** valid https URI */
+      callback: string;
+    } & { [key: string]: any };
+    TransportToGet: components["schemas"]["TransportCommon"];
+    TransportToPost: components["schemas"]["TransportCommon"] &
       ({
-        data: components["schemas"]["SubscriptionToGet"][];
+        /** shared secret for HMAC-SHA256 */
+        secret: string;
       } & { [key: string]: any }) & { [key: string]: any };
-    Challenge: string;
+    User: {
+      id: string;
+      login: string;
+      display_name: string;
+      type: "staff" | "admin" | "global_mod" | "";
+      broadcaster_type: "partner" | "affiliate" | "";
+      description: string;
+      profile_image_url: string;
+      offline_image_url: string;
+      view_count: number;
+      email: string;
+      created_at: string;
+    } & { [key: string]: any };
+    UserList: {
+      data: components["schemas"]["User"][];
+    } & { [key: string]: any };
     VerificationRequestBody: {
       challenge: components["schemas"]["Challenge"];
       subscription: components["schemas"]["SubscriptionToGet"];
     } & { [key: string]: any };
     VerificationResponseBody: components["schemas"]["Challenge"];
-    Notification: {
-      subscription: components["schemas"]["SubscriptionToGet"];
-      event: components["schemas"]["Event"];
-    } & { [key: string]: any };
-    CallbackRequestBody: (Partial<
-      components["schemas"]["VerificationRequestBody"]
-    > &
-      Partial<components["schemas"]["Notification"]>) & { [key: string]: any };
-    Event: (Partial<components["schemas"]["EventChannelFollow"]> &
-      Partial<components["schemas"]["EventStreamOnline"]> &
-      Partial<components["schemas"]["EventStreamOffline"]>) & {
-      [key: string]: any;
-    };
-    EventChannelFollow: {
-      user_id: string;
-      user_login: string;
-      user_name: string;
-      broadcaster_user_id: string;
-      broadcaster_user_login: string;
-      broadcaster_user_name: string;
-      followed_at: string;
-    } & { [key: string]: any };
-    EventStreamOnline: {
-      /** the id of the stream */
-      id: string;
-      broadcaster_user_id: string;
-      broadcaster_user_login: string;
-      broadcaster_user_name: string;
-      type: "live" | "playlist" | "watch_party" | "premiere" | "rerun";
-      started_at: string;
-    } & { [key: string]: any };
-    EventStreamOffline: {
-      broadcaster_user_id: string;
-      broadcaster_user_login: string;
-      broadcaster_user_name: string;
-    } & { [key: string]: any };
-    Pagination: {
-      total: number;
-      total_cost: number;
-      max_total_cost: number;
-      limit: number;
-    } & { [key: string]: any };
   };
   headers: {
     "Twitch-Eventsub-Message-Id"?: string;

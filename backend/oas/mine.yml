@@ -61,24 +61,6 @@ paths:
             application/json:
               schema:
                 type: object
-    delete:
-      tags:
-        - streamer
-        - monitoring
-      summary: get unmonitored
-      parameters:
-        - name: streamerId
-          in: path
-          schema:
-            $ref: "#/components/schemas/StreamerId"
-          required: true
-      responses:
-        202:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: object
 
 components:
   schemas:

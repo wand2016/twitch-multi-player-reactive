@@ -1,25 +1,8 @@
 import getAxiosInstance from "@bff/gateways/axios";
-import { searchUsersByLoginNames, User } from "@bff/gateways/users";
 import { components } from "@lib/types/schema-twitch";
 
-export async function subscribe(channels: string[]) {
-  const users = await searchUsersByLoginNames(channels);
-
-  const promises: Promise<unknown>[] = [];
-
-  const types = ["stream.online", "stream.offline"] as const;
-
-  for (const channel of channels) {
-    for (const type of types) {
-      promises.push(trySubscribeSingle(users, channel, type));
-    }
-  }
-
-  await Promise.all(promises);
-}
-
-async function doSubscribeSingleInternal(
-  userId: string,
+export async function subscribe(
+  broadcasterUserId: string,
   type: components["schemas"]["SubscriptionType"]
 ): Promise<void> {
   const axios = getAxiosInstance();
@@ -28,7 +11,7 @@ async function doSubscribeSingleInternal(
     type,
     version: "1",
     condition: {
-      broadcaster_user_id: userId,
+      broadcaster_user_id: broadcasterUserId,
     },
     transport: {
       method: "webhook",
@@ -40,23 +23,18 @@ async function doSubscribeSingleInternal(
   await axios.post<Response>("helix/eventsub/subscriptions", params);
 }
 
-async function trySubscribeSingle(
-  users: User[],
-  channel: string,
+export async function subscribeIdempotent(
+  broadcasterUserId: string,
   type: components["schemas"]["SubscriptionType"]
-): Promise<void> {
-  const userId = users.find(({ name }) => name === channel)?.id ?? "";
-
+): Promise<"newly subscribed" | "already subscribed"> {
   try {
-    await doSubscribeSingleInternal(userId, type);
+    await subscribe(broadcasterUserId, type);
+    return "newly subscribed";
   } catch (e) {
     if (e?.response?.status === 409) {
-      console.log("already registered:", { channel, userId, type });
-      return;
+      console.log("already registered");
+      return "already subscribed";
     }
-
-    console.warn(e);
-
     throw e;
   }
 }

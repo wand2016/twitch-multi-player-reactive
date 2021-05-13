@@ -1,5 +1,4 @@
 import getAxiosInstance from "@bff/gateways/axios";
-
 import { components, paths } from "@lib/types/schema-twitch";
 
 export async function searchUsersByLoginNames(
@@ -13,9 +12,7 @@ export async function searchUsersByLoginNames(
 
   const response = await axios.get<components["schemas"]["UserList"]>(
     "helix/users",
-    {
-      params,
-    }
+    { params }
   );
 
   return response.data;

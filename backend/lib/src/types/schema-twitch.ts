@@ -80,11 +80,7 @@ export interface paths {
       };
       responses: {
         /** successful operation */
-        200: {
-          content: {
-            "application/json": { [key: string]: any };
-          };
-        };
+        204: never;
       };
     };
   };

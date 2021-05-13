@@ -1,5 +1,4 @@
 import getAxiosInstance from "@bff/gateways/axios";
-
 import { components, paths } from "@lib/types/schema-twitch";
 
 export async function searchStreamsByUserId(

@@ -150,12 +150,8 @@ paths:
             type: string
             example: "f1c2a387-161a-49f9-a165-0f21d7a4e1c4"
       responses:
-        200:
+        204:
           description: successful operation
-          content:
-            application/json:
-              schema:
-                type: object
   /example/callback-handshake:
     post:
       tags:

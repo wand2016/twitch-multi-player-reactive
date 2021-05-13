@@ -38,21 +38,6 @@ export interface paths {
         };
       };
     };
-    delete: {
-      parameters: {
-        path: {
-          streamerId: components["schemas"]["StreamerId"];
-        };
-      };
-      responses: {
-        /** successful operation */
-        202: {
-          content: {
-            "application/json": { [key: string]: any };
-          };
-        };
-      };
-    };
   };
 }
 

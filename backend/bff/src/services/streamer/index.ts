@@ -1,8 +1,6 @@
-import { components } from "@lib/types/schema-mine";
 import { searchStreamsByUserId } from "@bff/gateways/channels";
 import { searchUsersByLoginNames } from "@bff/gateways/users";
-
-type Streamer = components["schemas"]["Streamer"];
+import { Streamer } from "@bff/domain/types";
 
 export async function findStreamersByLoginNames(
   loginNames: string[]

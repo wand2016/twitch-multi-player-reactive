@@ -16,10 +16,11 @@ app.use(express.static("public"));
 app.use("/api", api);
 
 // for debug
-import { deleteSubscriptions } from "@bff/gateways/subscriptions";
+import { unmonitorAll } from "@bff/services/monitoring";
+
 (async () => {
-  await deleteSubscriptions();
-  console.log("deleted all subs");
+  await unmonitorAll();
+  console.log("unmonitored all subs");
 })();
 
 app.listen(3000);

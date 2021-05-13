@@ -1,5 +1,7 @@
 import Pusher from "pusher";
 
+// TODO: pusherやめるかも
+// TODO: appIdとかハードコーディングなのテキトーすぎる
 function createWSClient() {
   return new Pusher({
     appId: "1198610",

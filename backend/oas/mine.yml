@@ -1,0 +1,120 @@
+openapi: 3.0.1
+info:
+  title: My APIs Spec
+  contact:
+    email: d19921207@gmail.com
+  version: 0.1.0
+servers:
+  # TODO: add API Gateway endpoint
+  - url: http://localhost:3000
+tags:
+  - name: streamer
+    description: streamer
+  - name: monitoring
+    description: monitoring of streamer
+paths:
+  /streamers:
+    get:
+      tags:
+        - streamer
+      summary: search streamers
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/StreamerId"
+            minLength: 1
+            maxLength: 100
+        - name: name
+          in: query
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/StreamerName"
+            minLength: 1
+            maxLength: 100
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamerList'
+  /streamers/{streamerId}/monitoring:
+    put:
+      tags:
+        - streamer
+        - monitoring
+      summary: get monitored
+      parameters:
+        - name: streamerId
+          in: path
+          schema:
+            $ref: "#/components/schemas/StreamerId"
+          required: true
+      responses:
+        202:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      tags:
+        - streamer
+        - monitoring
+      summary: get unmonitored
+      parameters:
+        - name: streamerId
+          in: path
+          schema:
+            $ref: "#/components/schemas/StreamerId"
+          required: true
+      responses:
+        202:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  schemas:
+    Streamer:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/StreamerId"
+        name:
+          $ref: "#/components/schemas/StreamerName"
+        is_live:
+          type: boolean
+      required:
+        - id
+        - name
+        - is_live
+    StreamerId:
+      type: string
+      example: "12345678"
+    StreamerName:
+      type: string
+      example: "wand_ota4"
+    StreamerList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Streamer"
+      required:
+        - data
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+security:
+  - bearerAuth: []

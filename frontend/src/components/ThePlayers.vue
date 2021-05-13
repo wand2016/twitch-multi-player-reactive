@@ -19,6 +19,7 @@ import { computed, defineComponent, reactive, onMounted } from "vue";
 import queryString from "query-string";
 import Pusher from "pusher-js";
 import axios from "axios";
+import { components, paths } from "@/types/schema-mine";
 
 type QueryParameters = {
   pusherKey: string;
@@ -86,41 +87,27 @@ function usePusher(channelVisibility: ChannelVisibility): Pusher {
   return pusher;
 }
 
-async function registerSubscriptions(): Promise<void> {
-  const channelNames = parseQueryString().channels;
-
-  await axios.post("http://localhost:3000/api/subscriptions", {
-    channels: channelNames,
-  });
+async function monitorStreamer(streamerId: string): Promise<void> {
+  await axios.put(
+    `http://localhost:3000/api/streamers/${streamerId}/monitoring`
+  );
 }
 
-type Channel = {
-  name: string;
-  isLive: boolean;
-};
-async function fetchChannels(): Promise<Channel[]> {
+async function fetchStreamers(): Promise<
+  components["schemas"]["StreamerList"]
+> {
   const channelNames = parseQueryString().channels;
 
-  type ResponseBody = {
-    data: {
-      name: string;
-      isLive: boolean;
-    }[];
+  const params: paths["/streamers"]["get"]["parameters"]["query"] = {
+    name: channelNames,
   };
 
-  const response = await axios.get<ResponseBody>(
-    "http://localhost:3000/api/channels/search",
-    {
-      params: {
-        names: channelNames,
-      },
-    }
+  const response = await axios.get<components["schemas"]["StreamerList"]>(
+    "http://localhost:3000/api/streamers",
+    { params }
   );
 
-  return response.data.data.map((ch) => ({
-    name: ch.name,
-    isLive: ch.isLive,
-  }));
+  return response.data;
 }
 
 function calculateLayout(channels: string[]) {
@@ -154,11 +141,10 @@ export default defineComponent({
     usePusher(channelVisibility);
 
     onMounted(async () => {
-      for (const channel of await fetchChannels()) {
-        channelVisibility[channel.name] = channel.isLive;
+      for (const streamer of (await fetchStreamers()).data) {
+        channelVisibility[streamer.name] = streamer.is_live;
+        monitorStreamer(streamer.id);
       }
-
-      await registerSubscriptions();
     });
 
     return {

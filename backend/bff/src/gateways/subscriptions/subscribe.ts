@@ -1,9 +1,9 @@
 import getAxiosInstance from "@bff/gateways/axios";
-import { findUsersByUserNames, User } from "@bff/gateways/users";
+import { searchUsersByLoginNames, User } from "@bff/gateways/users";
 import { components } from "@lib/types/schema-twitch";
 
 export async function subscribe(channels: string[]) {
-  const users = await findUsersByUserNames(channels);
+  const users = await searchUsersByLoginNames(channels);
 
   const promises: Promise<unknown>[] = [];
 

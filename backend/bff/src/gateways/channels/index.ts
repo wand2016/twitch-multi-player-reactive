@@ -2,18 +2,13 @@ import getAxiosInstance from "@bff/gateways/axios";
 
 import { components, paths } from "@lib/types/schema-twitch";
 
-type Channel = {
-  name: string;
-  isLive: boolean;
-};
-
-export async function findChannelsByUserLoginNames(
-  userLoginNames: string[]
-): Promise<Channel[]> {
+export async function searchStreamsByUserId(
+  userIds: string[]
+): Promise<components["schemas"]["StreamPagination"]> {
   const axios = getAxiosInstance();
 
   const params: paths["/streams"]["get"]["parameters"]["query"] = {
-    user_login: userLoginNames,
+    user_id: userIds,
   };
 
   const response = await axios.get<components["schemas"]["StreamPagination"]>(
@@ -23,10 +18,5 @@ export async function findChannelsByUserLoginNames(
     }
   );
 
-  return userLoginNames.map((userLoginName) => {
-    return {
-      name: userLoginName,
-      isLive: response.data.data.some((ch) => ch.user_login === userLoginName),
-    };
-  });
+  return response.data;
 }

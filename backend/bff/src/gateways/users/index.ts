@@ -2,18 +2,13 @@ import getAxiosInstance from "@bff/gateways/axios";
 
 import { components, paths } from "@lib/types/schema-twitch";
 
-export type User = {
-  id: string;
-  name: string;
-};
-
-export async function findUsersByUserNames(
-  userNames: string[]
-): Promise<User[]> {
+export async function searchUsersByLoginNames(
+  loginNames: string[]
+): Promise<components["schemas"]["UserList"]> {
   const axios = getAxiosInstance();
 
   const params: paths["/users"]["get"]["parameters"]["query"] = {
-    login: userNames,
+    login: loginNames,
   };
 
   const response = await axios.get<components["schemas"]["UserList"]>(
@@ -23,8 +18,5 @@ export async function findUsersByUserNames(
     }
   );
 
-  return response.data.data.map(({ login, id }) => ({
-    name: login,
-    id,
-  }));
+  return response.data;
 }

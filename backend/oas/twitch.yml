@@ -9,11 +9,107 @@ externalDocs:
 servers:
   - url: https://api.twitch.tv/helix
 tags:
+  - name: stream
+    description: stream
+    externalDocs:
+      url: https://dev.twitch.tv/docs/api/reference
+  - name: user
+    description: user
+    externalDocs:
+      url: https://dev.twitch.tv/docs/api/reference
   - name: subscription
     description: EventSub
     externalDocs:
       url: https://dev.twitch.tv/docs/eventsub
+  - name: callback
+    description: Callback of EventSub
+    externalDocs:
+      url: https://dev.twitch.tv/docs/eventsub
 paths:
+  /streams:
+    get:
+      tags:
+        - stream
+      summary: paginate streams
+      parameters:
+        - name: after
+          in: query
+          schema:
+            type: string
+        - name: before
+          in: query
+          schema:
+            type: string
+        - name: first
+          in: query
+          schema:
+            type: integer
+            maximum: 100
+            default: 20
+        - name: game_id
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+            maxLength: 100
+        - name: language
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+            maxLength: 100
+        - name: user_id
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+            maxLength: 100
+        - name: user_login
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+            maxLength: 100
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamPagination'
+
+  /users:
+    get:
+      tags:
+        - user
+      summary: get users
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+            maxLength: 100
+        - name: login
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+            maxLength: 100
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+
   /eventsub/subscriptions:
     get:
       tags:
@@ -25,7 +121,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SubscriptionPagination'
+                $ref: '#/components/schemas/SubscriptionListWithCost'
     post:
       tags:
         - subscription
@@ -42,7 +138,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SubscriptionPagination'
+                $ref: '#/components/schemas/SubscriptionListWithCost'
     delete:
       tags:
         - subscription
@@ -64,6 +160,7 @@ paths:
     post:
       tags:
         - subscription
+        - callback
       summary: subscription callback (handshake)
       requestBody:
         description: Challenge
@@ -89,6 +186,7 @@ paths:
     post:
       tags:
         - subscription
+        - callback
       summary: subscription callback (notification)
       requestBody:
         description: Notification
@@ -112,48 +210,224 @@ paths:
                 type: object
 components:
   schemas:
+    CallbackRequestBody:
+      anyOf:
+        - $ref: '#/components/schemas/VerificationRequestBody'
+        - $ref: '#/components/schemas/Notification'
+    Challenge:
+      type: string
+      example: "pogchamp-kappa-360noscope-vohiyo"
     Condition:
       type: object
       properties:
         broadcaster_user_id:
           type: string
           example: "12826"
-
-    TransportCommon:
+    Event:
+      anyOf:
+        - $ref: '#/components/schemas/EventChannelFollow'
+        - $ref: '#/components/schemas/EventStreamOffline'
+        - $ref: '#/components/schemas/EventStreamOnline'
+    EventChannelFollow:
       type: object
-      required:
-        - method
-        - callback
       properties:
-        method:
+        user_id:
+          type: string
+          example: "1234"
+        user_login:
+          type: string
+          example: "cool_user"
+        user_name:
+          type: string
+          example: "Cool_User"
+        broadcaster_user_id:
+          type: string
+          example: "1337"
+        broadcaster_user_login:
+          type: string
+          example: "cooler_user"
+        broadcaster_user_name:
+          type: string
+          example: "Cooler_User"
+        followed_at:
+          type: string
+          format: date-time
+      required:
+        - user_id
+        - user_login
+        - user_name
+        - broadcaster_user_id
+        - broadcaster_user_login
+        - broadcaster_user_name
+        - followed_at
+    EventStreamOffline:
+      type: object
+      properties:
+        broadcaster_user_id:
+          type: string
+          example: "1337"
+        broadcaster_user_login:
+          type: string
+          example: "cool_user"
+        broadcaster_user_name:
+          type: string
+          example: "Cool_User"
+      required:
+        - broadcaster_user_id
+        - broadcaster_user_login
+        - broadcaster_user_name
+    EventStreamOnline:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "9001"
+          description: "the id of the stream"
+        broadcaster_user_id:
+          type: string
+          example: "1337"
+        broadcaster_user_login:
+          type: string
+          example: "cool_user"
+        broadcaster_user_name:
+          type: string
+          example: "Cool_User"
+        type:
           type: string
           enum:
-            - "webhook"
-        callback:
+            - "live"
+            - "playlist"
+            - "watch_party"
+            - "premiere"
+            - "rerun"
+        started_at:
           type: string
-          example: "https://example.com/webhooks/callback"
-          description: "valid https URI"
-    TransportToGet:
-      $ref: '#/components/schemas/TransportCommon'
-    TransportToPost:
-      allOf:
-        - $ref: '#/components/schemas/TransportCommon'
-        - type: object
-          required:
-            - secret
+          format: date-time
+      required:
+        - id
+        - broadcaster_user_id
+        - broadcaster_user_login
+        - broadcaster_user_name
+        - type
+        - started_at
+    ListWithCost:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 1
+        total_cost:
+          type: integer
+          example: 1
+        max_total_cost:
+          type: integer
+          example: 10000
+        limit:
+          type: integer
+          example: 10000
+      required:
+        - total
+        - total_cost
+        - max_total_cost
+        - limit
+    Notification:
+      type: object
+      properties:
+        subscription:
+          $ref: '#/components/schemas/SubscriptionToGet'
+        event:
+          $ref: '#/components/schemas/Event'
+      required:
+        - subscription
+        - event
+    Pagination:
+      type: object
+      properties:
+        pagination:
+          type: object
           properties:
-            secret:
+            cursor:
               type: string
-              example: "s3cRe7"
-              description: "shared secret for HMAC-SHA256"
-
-    SubscriptionType:
-      type: string
-      enum:
-        - "channel.follow"
-        - "stream.online"
-        - "stream.offline"
-
+              example: "eyJiIjp7IkN1cnNvciI6ImV5SnpJam8zT0RNMk5TNDBORFF4TlRjMU1UY3hOU3dpWkNJNlptRnNjMlVzSW5RaU9uUnlkV1Y5In0sImEiOnsiQ3Vyc29yIjoiZXlKeklqb3hOVGs0TkM0MU56RXhNekExTVRZNU1ESXNJbVFpT21aaGJITmxMQ0owSWpwMGNuVmxmUT09In19"
+          required:
+            - cursor
+      required:
+        - pagination
+    Stream:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "41375541868"
+        user_id:
+          type: string
+          example: "459331509"
+        user_login:
+          type: string
+          example: "auronplay"
+        user_name:
+          type: string
+          example: "auronplay"
+        game_id:
+          type: string
+          example: "494131"
+        game_name:
+          type: string
+          example: "Little Nightmares"
+        type:
+          type: string
+          description: "empty in case of error"
+          enum:
+            - "live"
+            - ""
+        title:
+          type: string
+          example: "hablamos y le damos a Little Nightmares 1"
+        viewer_count:
+          type: integer
+          example: 78365
+        started_at:
+          type: string
+          format: date-time
+        language:
+          type: string
+          example: "es"
+        thumbnail_url:
+          type: string
+          example: "https://static-cdn.jtvnw.net/previews-ttv/live_user_auronplay-{width}x{height}.jpg"
+        tag_ids:
+          type: array
+          items:
+            type: string
+            example: "d4bb9c58-2141-4881-bcdc-3fe0505457d1"
+        is_mature:
+          type: boolean
+      required:
+        - id
+        - user_id
+        - user_login
+        - user_name
+        - game_id
+        - game_name
+        - type
+        - title
+        - viewer_count
+        - started_at
+        - language
+        - thumbnail_url
+        - tag_ids
+        - is_mature
+    StreamPagination:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Stream'
+          required:
+            - data
     SubscriptionCommon:
       type: object
       required:
@@ -168,6 +442,17 @@ components:
           example: "1"
         condition:
           $ref: '#/components/schemas/Condition'
+    SubscriptionListWithCost:
+      allOf:
+        - $ref: '#/components/schemas/ListWithCost'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/SubscriptionToGet'
+          required:
+            - data
     SubscriptionToPost:
       allOf:
         - $ref: '#/components/schemas/SubscriptionCommon'
@@ -208,21 +493,103 @@ components:
             - cost
             - transport
             - created_at
-    SubscriptionPagination:
-      allOf:
-        - $ref: '#/components/schemas/Pagination'
-        - type: object
-          properties:
-            data:
-              type: array
-              items:
-                $ref: '#/components/schemas/SubscriptionToGet'
-          required:
-            - data
-
-    Challenge:
+    SubscriptionType:
       type: string
-      example: "pogchamp-kappa-360noscope-vohiyo"
+      enum:
+        - "channel.follow"
+        - "stream.online"
+        - "stream.offline"
+    TransportCommon:
+      type: object
+      required:
+        - method
+        - callback
+      properties:
+        method:
+          type: string
+          enum:
+            - "webhook"
+        callback:
+          type: string
+          example: "https://example.com/webhooks/callback"
+          description: "valid https URI"
+    TransportToGet:
+      $ref: '#/components/schemas/TransportCommon'
+    TransportToPost:
+      allOf:
+        - $ref: '#/components/schemas/TransportCommon'
+        - type: object
+          required:
+            - secret
+          properties:
+            secret:
+              type: string
+              example: "s3cRe7"
+              description: "shared secret for HMAC-SHA256"
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "141981764"
+        login:
+          type: string
+          example: "twitchdev"
+        display_name:
+          type: string
+          example: "TwitchDev"
+        type:
+          type: string
+          enum:
+            - "staff"
+            - "admin"
+            - "global_mod"
+            - ""
+        broadcaster_type:
+          type: string
+          enum:
+            - "partner"
+            - "affiliate"
+            - ""
+        description:
+          type: string
+          example: "Supporting third-party developers building Twitch integrations from chatbots to game integrations."
+        profile_image_url:
+          type: string
+          example: "https://static-cdn.jtvnw.net/jtv_user_pictures/8a6381c7-d0c0-4576-b179-38bd5ce1d6af-profile_image-300x300.png"
+        offline_image_url:
+          type: string
+          example: "https://static-cdn.jtvnw.net/jtv_user_pictures/3f13ab61-ec78-4fe6-8481-8682cb3b0ac2-channel_offline_image-1920x1080.png"
+        view_count:
+          type: integer
+          example: 5980557
+        email:
+          type: string
+          example: "not-real@email.com"
+        created_at:
+          type: string
+          example: "2016-12-14T20:32:28.894263Z"
+      required:
+        - id
+        - login
+        - display_name
+        - type
+        - broadcaster_type
+        - description
+        - profile_image_url
+        - offline_image_url
+        - view_count
+        - email
+        - created_at
+    UserList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+      required:
+        - data
     VerificationRequestBody:
       type: object
       properties:
@@ -235,130 +602,6 @@ components:
         - subscription
     VerificationResponseBody:
       $ref: '#/components/schemas/Challenge'
-    Notification:
-      type: object
-      properties:
-        subscription:
-          $ref: '#/components/schemas/SubscriptionToGet'
-        event:
-          $ref: '#/components/schemas/Event'
-      required:
-        - subscription
-        - event
-    CallbackRequestBody:
-      anyOf:
-        - $ref: '#/components/schemas/VerificationRequestBody'
-        - $ref: '#/components/schemas/Notification'
-
-    Event:
-      anyOf:
-        - $ref: '#/components/schemas/EventChannelFollow'
-        - $ref: '#/components/schemas/EventStreamOnline'
-        - $ref: '#/components/schemas/EventStreamOffline'
-
-    EventChannelFollow:
-      type: object
-      properties:
-        user_id:
-          type: string
-          example: "1234"
-        user_login:
-          type: string
-          example: "cool_user"
-        user_name:
-          type: string
-          example: "Cool_User"
-        broadcaster_user_id:
-          type: string
-          example: "1337"
-        broadcaster_user_login:
-          type: string
-          example: "cooler_user"
-        broadcaster_user_name:
-          type: string
-          example: "Cooler_User"
-        followed_at:
-          type: string
-          format: date-time
-      required:
-        - user_id
-        - user_login
-        - user_name
-        - broadcaster_user_id
-        - broadcaster_user_login
-        - broadcaster_user_name
-        - followed_at
-    EventStreamOnline:
-      type: object
-      properties:
-        id:
-          type: string
-          example: "9001"
-          description: "the id of the stream"
-        broadcaster_user_id:
-          type: string
-          example: "1337"
-        broadcaster_user_login:
-          type: string
-          example: "cool_user"
-        broadcaster_user_name:
-          type: string
-          example: "Cool_User"
-        type:
-          type: string
-          enum:
-            - "live"
-            - "playlist"
-            - "watch_party"
-            - "premiere"
-            - "rerun"
-        started_at:
-          type: string
-          format: date-time
-      required:
-        - id
-        - broadcaster_user_id
-        - broadcaster_user_login
-        - broadcaster_user_name
-        - type
-        - started_at
-    EventStreamOffline:
-      type: object
-      properties:
-        broadcaster_user_id:
-          type: string
-          example: "1337"
-        broadcaster_user_login:
-          type: string
-          example: "cool_user"
-        broadcaster_user_name:
-          type: string
-          example: "Cool_User"
-      required:
-        - broadcaster_user_id
-        - broadcaster_user_login
-        - broadcaster_user_name
-
-    Pagination:
-      type: object
-      properties:
-        total:
-          type: integer
-          example: 1
-        total_cost:
-          type: integer
-          example: 1
-        max_total_cost:
-          type: integer
-          example: 10000
-        limit:
-          type: integer
-          example: 10000
-      required:
-        - total
-        - total_cost
-        - max_total_cost
-        - limit
 
   securitySchemes:
     bearerAuth:

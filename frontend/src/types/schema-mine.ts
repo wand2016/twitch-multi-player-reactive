@@ -16,6 +16,14 @@ export interface paths {
       };
     };
   };
+  "/monitorings": {
+    delete: {
+      responses: {
+        /** successful operation */
+        204: never;
+      };
+    };
+  };
   "/streamers": {
     get: {
       parameters: {
@@ -43,7 +51,7 @@ export interface paths {
       };
       responses: {
         /** successful operation */
-        202: {
+        204: {
           content: {
             "application/json": { [key: string]: any };
           };

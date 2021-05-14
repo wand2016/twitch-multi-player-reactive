@@ -8,7 +8,7 @@ export async function listSubscriptions(): Promise<
 
   const response = await axios.get<
     components["schemas"]["SubscriptionListWithCost"]
-  >("helix/eventsub/subscriptions");
+  >("eventsub/subscriptions");
 
   return response.data;
 }

@@ -4,7 +4,7 @@ import { createOAuthInterceptor } from "@lib/axios/interceptors/oauth";
 function createAxiosInstance() {
   const ret = axios.create({
     // TODO: envに逃がしたほうがいい気がする
-    baseURL: "https://api.twitch.tv/",
+    baseURL: "https://api.twitch.tv/helix/",
   });
 
   const { onFulfilled } = createOAuthInterceptor({

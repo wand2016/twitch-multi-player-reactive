@@ -10,10 +10,9 @@ export async function searchUsersByLoginNames(
     login: loginNames,
   };
 
-  const response = await axios.get<components["schemas"]["UserList"]>(
-    "helix/users",
-    { params }
-  );
+  const response = await axios.get<components["schemas"]["UserList"]>("users", {
+    params,
+  });
 
   return response.data;
 }

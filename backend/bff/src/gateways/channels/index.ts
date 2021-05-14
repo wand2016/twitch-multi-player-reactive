@@ -11,7 +11,7 @@ export async function searchStreamsByUserId(
   };
 
   const response = await axios.get<components["schemas"]["StreamPagination"]>(
-    "helix/streams",
+    "streams",
     {
       params,
     }

@@ -20,7 +20,7 @@ export async function subscribe(
     },
   };
 
-  await axios.post<Response>("helix/eventsub/subscriptions", params);
+  await axios.post<Response>("eventsub/subscriptions", params);
 }
 
 export async function subscribeIdempotent(

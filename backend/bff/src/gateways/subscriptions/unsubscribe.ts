@@ -8,5 +8,5 @@ export async function unsubscribeById(subscriptionId: string): Promise<void> {
     id: subscriptionId,
   };
 
-  await axios.delete("helix/eventsub/subscriptions", { data });
+  await axios.delete("eventsub/subscriptions", { data });
 }

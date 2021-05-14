@@ -2,7 +2,7 @@ import { getWSClient } from "@callback/websocket";
 
 export type Notification = {
   type: "stream.online" | "stream.offline";
-  channel: string;
+  streamerName: string;
 };
 
 export type Notify = {
@@ -11,7 +11,11 @@ export type Notify = {
 
 // TODO: 自前でWebSocketサーバ用意して遊ぶかも
 export const notify: Notify = async (notification: Notification) => {
-  await getWSClient().trigger("my-channel", "my-event", {
-    notification,
-  });
+  await getWSClient().trigger(
+    process.env.PUSHER_CHANNEL ?? "",
+    process.env.PUSHER_EVENT ?? "",
+    {
+      notification,
+    }
+  );
 };

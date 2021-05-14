@@ -9,7 +9,7 @@ export default async function handleNotification(
     case "stream.online":
       await notify({
         type: callbackRequest.subscription.type,
-        channel: callbackRequest.event.broadcaster_user_name ?? "",
+        streamerName: callbackRequest.event.broadcaster_user_name ?? "",
       });
       return;
     default:

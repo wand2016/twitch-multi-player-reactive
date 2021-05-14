@@ -64,7 +64,13 @@ export interface paths {
 export interface components {
   schemas: {
     Config: {
-      pusher_key?: string;
+      pusher: {
+        key: string;
+        appId: string;
+        cluster: string;
+        channel: string;
+        event: string;
+      } & { [key: string]: any };
     } & { [key: string]: any };
     Streamer: {
       id: components["schemas"]["StreamerId"];

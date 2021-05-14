@@ -5,7 +5,13 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   const responseBody: components["schemas"]["Config"] = {
-    pusher_key: process.env.PUSHER_KEY ?? "",
+    pusher: {
+      key: process.env.PUSHER_KEY ?? "",
+      appId: process.env.PUSHER_APP_ID ?? "",
+      cluster: process.env.PUSHER_CLUSTER ?? "",
+      channel: process.env.PUSHER_CHANNEL ?? "",
+      event: process.env.PUSHER_EVENT ?? "",
+    },
   };
   res.send(responseBody);
 });

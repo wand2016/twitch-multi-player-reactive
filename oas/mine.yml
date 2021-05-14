@@ -89,8 +89,30 @@ components:
     Config:
       type: object
       properties:
-        pusher_key:
-          type: string
+        pusher:
+          type: object
+          properties:
+            key:
+              type: string
+            appId:
+              type: string
+            cluster:
+              type: string
+              example: "ap3"
+            channel:
+              type: string
+              example: "my-channel"
+            event:
+              type: string
+              example: "my-event"
+          required:
+            - key
+            - appId
+            - cluster
+            - channel
+            - event
+      required:
+        - pusher
     Streamer:
       type: object
       properties:

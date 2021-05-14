@@ -1,8 +1,8 @@
 <template>
   <div style="white-space: nowrap">
-    <template v-for="(channel, i) in channels" :key="channel">
+    <template v-for="(streamer, i) in streamers" :key="streamer.id">
       <iframe
-        :src="`https://player.twitch.tv/?channel=${channel}&parent=localhost&autoplay=true`"
+        :src="`https://player.twitch.tv/?channel=${streamer.name}&parent=localhost&autoplay=true`"
         :height="layout.unitHeight"
         :width="layout.unitWidth"
         :allowfullscreen="true"
@@ -15,15 +15,24 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, reactive, onMounted } from "vue";
+import {
+  computed,
+  ComputedRef,
+  defineComponent,
+  ref,
+  Ref,
+  onMounted,
+} from "vue";
 import queryString from "query-string";
-import Pusher from "pusher-js";
-import axios from "axios";
-import { components, paths } from "@/types/schema-mine";
+import { components } from "@/types/schema-mine";
+import { fetchConfig } from "@/gateways/config";
+import { monitorStreamer } from "@/gateways/monitoring";
+import { calculateLayout } from "@/layout";
+import { useNotification } from "@/notification";
+import { fetchStreamers } from "@/gateways/streamer";
 
 type QueryParameters = {
-  pusherKey: string;
-  channels: string[];
+  streamer: string[];
   width: number;
   height: number;
 };
@@ -33,123 +42,84 @@ function parseQueryString(): QueryParameters {
     arrayFormat: "comma",
   });
 
-  const pusherKey = parsed["pusher_key"];
-  if (!pusherKey || typeof pusherKey !== "string") {
-    throw new Error("query parameter pusher_key is not specified.");
-  }
-
-  const channels = ([] as string[])
-    .concat(parsed["channels"] ?? [])
+  const streamer = ([] as string[])
+    .concat(parsed["streamer"] ?? [])
     .map((ch) => ch.toLowerCase());
 
   const width = Number(parsed["width"] || window.innerWidth);
   const height = Number(parsed["height"] || window.innerHeight);
 
   return {
-    pusherKey,
-    channels,
+    streamer,
     width,
     height,
   };
 }
 
-// FIXME: 内部表現を暴露しててよくない
-type ChannelVisibility = Record<string, boolean>;
+type Streamer = {
+  id: string;
+  name: string;
+  isLive: boolean;
+};
 
-function usePusher(channelVisibility: ChannelVisibility): Pusher {
-  type Notification = {
-    type: "stream.online" | "stream.offline";
-    channel: string;
-  };
-  type Data = {
-    notification: Notification;
-  };
-
-  Pusher.logToConsole = true;
-
-  const pusher = new Pusher(parseQueryString().pusherKey, {
-    cluster: "ap3",
+function useStreamers(streamerNames: string[]) {
+  const response: Ref<components["schemas"]["StreamerList"]> = ref({
+    data: [],
   });
 
-  const channel = pusher.subscribe("my-channel");
-  channel.bind("my-event", ({ notification }: Data) => {
-    const channel = notification.channel.toLowerCase();
-
-    if (notification.type === "stream.online") {
-      channelVisibility[channel] = true;
-    }
-    if (notification.type === "stream.offline") {
-      channelVisibility[channel] = false;
-    }
-    throw notification;
+  const streamers: ComputedRef<Streamer[]> = computed(() => {
+    return response.value.data.map((streamer) => {
+      return {
+        id: streamer.id,
+        name: streamer.name.toLowerCase(),
+        isLive: streamer.is_live,
+      };
+    });
   });
 
-  return pusher;
-}
-
-async function monitorStreamer(streamerId: string): Promise<void> {
-  await axios.put(
-    `http://localhost:3000/api/streamers/${streamerId}/monitoring`
-  );
-}
-
-async function fetchStreamers(): Promise<
-  components["schemas"]["StreamerList"]
-> {
-  const channelNames = parseQueryString().channels;
-
-  const params: paths["/streamers"]["get"]["parameters"]["query"] = {
-    name: channelNames,
+  const reloadStreamers = async () => {
+    response.value = await fetchStreamers(streamerNames);
   };
-
-  const response = await axios.get<components["schemas"]["StreamerList"]>(
-    "http://localhost:3000/api/streamers",
-    { params }
-  );
-
-  return response.data;
-}
-
-function calculateLayout(channels: string[]) {
-  const { width, height } = parseQueryString();
-  const rows = Math.ceil(Math.sqrt(channels.length));
-  const cols = rows;
-  const unitWidth = Math.floor(width / cols);
-  const unitHeight = Math.floor(height / rows);
 
   return {
-    rows,
-    cols,
-    unitWidth,
-    unitHeight,
+    streamers,
+    reloadStreamers,
   };
 }
 
 export default defineComponent({
   name: "the-players",
   setup() {
-    const channelVisibility: Record<string, boolean> = reactive({});
+    const queryParameters = parseQueryString();
 
-    const channels = computed((): string[] => {
-      return parseQueryString().channels.filter(
-        (name) => channelVisibility[name]
-      );
-    });
+    const { streamers, reloadStreamers } = useStreamers(
+      queryParameters.streamer
+    );
 
-    const layout = computed(() => calculateLayout(channels.value));
-
-    usePusher(channelVisibility);
+    const layout = computed(() =>
+      calculateLayout(
+        queryParameters.width,
+        queryParameters.height,
+        streamers.value.length
+      )
+    );
 
     onMounted(async () => {
-      for (const streamer of (await fetchStreamers()).data) {
-        channelVisibility[streamer.name] = streamer.is_live;
-        monitorStreamer(streamer.id);
-      }
+      const config = await fetchConfig();
+
+      useNotification(config.pusher, [], async () => {
+        await reloadStreamers();
+      });
+
+      await reloadStreamers();
+
+      await streamers.value.map((streamer) => {
+        return monitorStreamer(streamer.id);
+      });
     });
 
     return {
-      channelVisibility,
-      channels,
+      streamers,
       layout,
     };
   },

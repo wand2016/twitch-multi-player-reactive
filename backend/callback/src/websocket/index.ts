@@ -1,13 +1,12 @@
 import Pusher from "pusher";
 
 // TODO: pusherやめるかも
-// TODO: appIdとかハードコーディングなのテキトーすぎる
 function createWSClient() {
   return new Pusher({
-    appId: "1198610",
+    appId: process.env.PUSHER_APP_ID ?? "",
     key: process.env.PUSHER_KEY ?? "",
     secret: process.env.PUSHER_SECRET ?? "",
-    cluster: "ap3",
+    cluster: process.env.PUSHER_CLUSTER ?? "",
     useTLS: true,
   });
 }

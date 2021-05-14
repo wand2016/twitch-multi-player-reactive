@@ -13,12 +13,4 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", api);
 
-// for debug
-import { unmonitorAll } from "@bff/services/monitoring";
-
-(async () => {
-  await unmonitorAll();
-  console.log("unmonitored all subs");
-})();
-
 app.listen(3000);

@@ -34,7 +34,7 @@ router.put(
     res
   ) => {
     await monitorStreamer(req.params.streamerId);
-    res.send("sub ok");
+    res.sendStatus(204);
   }
 );
 

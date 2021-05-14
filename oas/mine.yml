@@ -8,11 +8,25 @@ servers:
   # TODO: add API Gateway endpoint
   - url: http://localhost:3000
 tags:
+  - name: config
+    description: config
   - name: streamer
     description: streamer
   - name: monitoring
     description: monitoring of streamer
 paths:
+  /config:
+    get:
+      tags:
+        - config
+      summary: get config
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Config"
   /streamers:
     get:
       tags:
@@ -64,6 +78,11 @@ paths:
 
 components:
   schemas:
+    Config:
+      type: object
+      properties:
+        pusher_key:
+          type: string
     Streamer:
       type: object
       properties:

@@ -4,6 +4,18 @@
  */
 
 export interface paths {
+  "/config": {
+    get: {
+      responses: {
+        /** successful operation */
+        200: {
+          content: {
+            "application/json": components["schemas"]["Config"];
+          };
+        };
+      };
+    };
+  };
   "/streamers": {
     get: {
       parameters: {
@@ -43,6 +55,9 @@ export interface paths {
 
 export interface components {
   schemas: {
+    Config: {
+      pusher_key?: string;
+    } & { [key: string]: any };
     Streamer: {
       id: components["schemas"]["StreamerId"];
       name: components["schemas"]["StreamerName"];

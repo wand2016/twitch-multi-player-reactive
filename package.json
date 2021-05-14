@@ -1,0 +1,25 @@
+{
+  "name": "twitch-multi-player-reactive",
+  "version": "1.0.0",
+  "description": "指定のストリーマーが配信を開始したらプレーヤーを動的に追加、配信を停止したらプレーヤーを動的に削除するマルチツイッチ",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "serverless": "^2.41.2",
+    "serverless-offline": "^7.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wand2016/twitch-multi-player-reactive.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wand2016/twitch-multi-player-reactive/issues"
+  },
+  "homepage": "https://github.com/wand2016/twitch-multi-player-reactive#readme"
+}

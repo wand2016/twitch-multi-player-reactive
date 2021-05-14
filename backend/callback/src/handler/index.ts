@@ -8,19 +8,24 @@ import handleNotification from "@callback/handler/handle-notification";
 import { verifySignature } from "@callback/signature";
 
 export async function handle(
-  callbackRequest: components["schemas"]["CallbackRequestBody"]
+  headers: Record<string, string | undefined>,
+  body: string
 ): Promise<string | void> {
   // TODO: 署名検証する
-  verifySignature({}, "");
+  verifySignature(headers, body);
 
-  if (isRequestVerification(callbackRequest)) {
-    return handleVerification(callbackRequest);
+  const parsedBody = JSON.parse(
+    body
+  ) as components["schemas"]["CallbackRequestBody"];
+
+  if (isRequestVerification(parsedBody)) {
+    return handleVerification(parsedBody);
   }
-  if (isRequestNotification(callbackRequest)) {
-    await handleNotification(callbackRequest);
+  if (isRequestNotification(parsedBody)) {
+    await handleNotification(parsedBody);
     return;
   }
 
-  console.error(callbackRequest);
+  console.error(headers, body, parsedBody);
   throw new Error("unhandled callback request");
 }

@@ -12,7 +12,7 @@ export async function handle(
   body: string
 ): Promise<string | void> {
   // TODO: 署名検証する
-  verifySignature(headers, body);
+  verifySignature(headers, body, process.env.HMAC_SECRET ?? "");
 
   const parsedBody = JSON.parse(
     body

@@ -1,23 +1,32 @@
-interface SignatureVerificationFailedException {
-  reason: string;
-}
+import crypto from "crypto";
 
-class SignatureVerificationFailedExceptionBase
-  extends Error
-  implements SignatureVerificationFailedException {
-  constructor(public readonly reason: string) {
-    super();
-  }
-}
+export abstract class SignatureVerificationFailedException extends Error {}
+
+export class SignatureMismatch extends SignatureVerificationFailedException {}
 
 /**
  * Twitchからのコールバックリクエストの真性性を検証する
- * TODO: 本実装
  * @throws SignatureVerificationFailedException 署名検証に失敗したら送出
  */
 export function verifySignature(
   requestHeader: Record<string, string | undefined>,
-  requestBody: string
+  requestBody: string,
+  secret: string
 ): void {
+  const hmacMessage =
+    (requestHeader["Twitch-Eventsub-Message-Id"] ?? "") +
+    (requestHeader["Twitch-Eventsub-Message-Timestamp"] ?? "") +
+    requestBody;
+
+  const signature = crypto.createHmac("sha256", secret).update(hmacMessage);
+
+  const expected = `sha256=${signature.digest("hex")}`;
+  const actual = requestHeader["Twitch-Eventsub-Message-Signature"] ?? "";
+
+  if (expected !== actual) {
+    throw new SignatureMismatch(
+      `signature mismatch. expected: ${expected}, actual: ${actual}`
+    );
+  }
   return;
 }

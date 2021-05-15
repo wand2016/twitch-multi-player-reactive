@@ -1,9 +1,16 @@
 import axios from "axios";
 
 function createAxiosInstance() {
+  // HACK: 同期XHR
+  const xhr = new XMLHttpRequest();
+  xhr.open("GET", "/config.json", false);
+  xhr.setRequestHeader("content-type", "application/json");
+  xhr.send();
+
+  const config = JSON.parse(xhr.responseText);
+
   return axios.create({
-    // TODO: 本実装
-    baseURL: "http://localhost:3000/dev/api/",
+    baseURL: config.API_ENDPOINT,
   });
 }
 

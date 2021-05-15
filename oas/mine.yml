@@ -5,8 +5,7 @@ info:
     email: d19921207@gmail.com
   version: 0.1.0
 servers:
-  # TODO: add API Gateway endpoint
-  - url: http://localhost:3000
+  - url: http://localhost:3000/dev/api
 tags:
   - name: config
     description: config

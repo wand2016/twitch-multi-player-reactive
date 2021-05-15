@@ -1,7 +1,10 @@
 const path = require("path");
 
 module.exports = {
-  entry: "./callback/src/index.ts",
+  entry: {
+    bff: "./src/bff/index.ts",
+    callback: "./src/callback/index.ts",
+  },
   target: "node",
   module: {
     rules: [
@@ -14,9 +17,9 @@ module.exports = {
   },
   resolve: {
     alias: {
-      "@bff": path.resolve(__dirname, "bff/src"),
-      "@callback": path.resolve(__dirname, "callback/src"),
-      "@lib": path.resolve(__dirname, "lib/src"),
+      "@bff": path.resolve(__dirname, "src/bff"),
+      "@callback": path.resolve(__dirname, "src/callback"),
+      "@lib": path.resolve(__dirname, "src/lib"),
     },
     extensions: [".ts", ".js", ".json"],
     fallback: {
@@ -24,8 +27,8 @@ module.exports = {
     },
   },
   output: {
-    filename: "callback.js",
-    path: path.resolve(__dirname, "callback/dist"),
+    filename: "[name].js",
+    path: path.resolve(__dirname, "dist"),
     libraryTarget: "commonjs2",
   },
 };

@@ -4,11 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "generate:schema:twitch": "npx openapi-typescript oas/twitch.yml --output lib/src/types/schema-twitch.ts",
-    "generate:schema:mine": "npx openapi-typescript ../oas/mine.yml --output lib/src/types/schema-mine.ts",
+    "build": "webpack",
+    "generate:schema:twitch": "npx openapi-typescript oas/twitch.yml --output src/lib/types/schema-twitch.ts",
+    "generate:schema:mine": "npx openapi-typescript ../oas/mine.yml --output src/lib/types/schema-mine.ts",
     "generate:schema": "npm run generate:schema:twitch ; npm run generate:schema:mine",
-    "serve:bff": "CALLBACK_ENDPOINT=$(curl -s localhost:4040/api/tunnels | jq -r '.tunnels[].public_url' | grep -e 'https.*') ts-node -r tsconfig-paths/register bff/src/index.ts",
-    "serve:callback": "ts-node -r tsconfig-paths/register callback/src/index.ts",
+    "serve:bff": "CALLBACK_ENDPOINT=$(curl -s localhost:4040/api/tunnels | jq -r '.tunnels[].public_url' | grep -e 'https.*') ts-node -r tsconfig-paths/register src/bff/index.ts",
+    "serve:callback": "ts-node -r tsconfig-paths/register src/callback/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

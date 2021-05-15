@@ -1,9 +1,7 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import express from "express";
 import cors from "cors";
 import api from "@bff/routes/api";
+import serverless from "serverless-http";
 
 const app = express();
 
@@ -13,4 +11,4 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", api);
 
-app.listen(3000);
+export const handler = serverless(app);

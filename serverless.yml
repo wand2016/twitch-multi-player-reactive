@@ -20,14 +20,30 @@ service: twitch-multi-player-reactive
 # Check out our docs for more details
 frameworkVersion: '2'
 
+useDotenv: true
+variablesResolutionMode: 20210326
+
 provider:
   name: aws
   runtime: nodejs12.x
   lambdaHashingVersion: 20201221
-
-# you can overwrite defaults here
-#  stage: dev
-#  region: us-east-1
+  environment:
+    CALLBACK_ENDPOINT:
+      # callbackのAPI Gatewayのエンドポイント
+      # .serverless/cloudformation-template-update-stack.json でexport定義されている
+      Fn::ImportValue: sls-twitch-multi-player-reactive-dev-HttpApiUrl
+    STAGE: ${opt:stage,'dev'}
+    CLIENT_ID: ${env:CLIENT_ID}
+    CLIENT_SECRET: ${env:CLIENT_SECRET}
+    PUSHER_KEY: ${env:PUSHER_KEY}
+    PUSHER_SECRET: ${env:PUSHER_SECRET}
+    PUSHER_APP_ID: ${env:PUSHER_APP_ID}
+    PUSHER_CLUSTER: ${env:PUSHER_CLUSTER}
+    PUSHER_CHANNEL: ${env:PUSHER_CHANNEL}
+    PUSHER_EVENT: ${env:PUSHER_EVENT}
+    HMAC_SECRET: ${env:HMAC_SECRET}
+  stage: dev
+  region: ap-northeast-1
 
 # you can add statements to the Lambda function's IAM Role here
 #  iamRoleStatements:
@@ -45,10 +61,6 @@ provider:
 #            - "Ref" : "ServerlessDeploymentBucket"
 #            - "/*"
 
-# you can define service wide environment variables here
-#  environment:
-#    variable1: value1
-
 # you can add packaging information here
 #package:
 #  patterns:
@@ -58,15 +70,23 @@ provider:
 #    - include-me-dir/**
 
 functions:
-  hello:
+  callback:
     handler: backend/dist/callback.handler
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
     events:
       - httpApi:
           path: /callback
           method: post
+  bff:
+    handler: backend/dist/bff.handler
+    events:
+      - http:
+          path: /
+          method: ANY
+          cors: true
+      - http:
+          path: '{proxy+}'
+          method: ANY
+          cors: true
 #      - websocket: $connect
 #      - s3: ${env:BUCKET}
 #      - schedule: rate(10 minutes)

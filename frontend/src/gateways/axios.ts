@@ -3,7 +3,7 @@ import axios from "axios";
 function createAxiosInstance() {
   return axios.create({
     // TODO: 本実装
-    baseURL: "http://localhost:3000/api/",
+    baseURL: "http://localhost:3000/dev/api/",
   });
 }
 

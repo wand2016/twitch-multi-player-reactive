@@ -1,12 +1,14 @@
 import crypto from "crypto";
 
-export abstract class SignatureVerificationFailedException extends Error {}
-
-export class SignatureMismatch extends SignatureVerificationFailedException {}
+export class SignatureMismatch extends Error {
+  constructor(expected: string, actual: string) {
+    super(`signature mismatch. expected: ${expected}, actual: ${actual}`);
+  }
+}
 
 /**
  * Twitchからのコールバックリクエストの真性性を検証する
- * @throws SignatureVerificationFailedException 署名検証に失敗したら送出
+ * @throws SignatureMismatch 署名検証に失敗したら送出
  */
 export function verifySignature(
   requestHeader: Record<string, string | undefined>,
@@ -24,9 +26,7 @@ export function verifySignature(
   const actual = requestHeader["Twitch-Eventsub-Message-Signature"] ?? "";
 
   if (expected !== actual) {
-    throw new SignatureMismatch(
-      `signature mismatch. expected: ${expected}, actual: ${actual}`
-    );
+    throw new SignatureMismatch(expected, actual);
   }
   return;
 }

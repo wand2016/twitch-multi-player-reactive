@@ -15,7 +15,7 @@ export async function subscribe(
     },
     transport: {
       method: "webhook",
-      callback: `${process.env.CALLBACK_ENDPOINT}/api/subscriptions/callback`,
+      callback: `${process.env.CALLBACK_ENDPOINT}/callback`,
       secret: process.env.HMAC_SECRET ?? "",
     },
   };
@@ -32,7 +32,6 @@ export async function subscribeIdempotent(
     return "newly subscribed";
   } catch (e) {
     if (e?.response?.status === 409) {
-      console.log("already registered");
       return "already subscribed";
     }
     throw e;

@@ -10,7 +10,7 @@
     "generate:schema": "npm run generate:schema:twitch ; npm run generate:schema:mine",
     "serve:bff": "CALLBACK_ENDPOINT=$(curl -s localhost:4040/api/tunnels | jq -r '.tunnels[].public_url' | grep -e 'https.*') ts-node -r tsconfig-paths/register src/bff/index.ts",
     "serve:callback": "ts-node -r tsconfig-paths/register src/callback/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -28,8 +28,14 @@
     "uninstall": "0.0.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.14.2",
+    "@babel/preset-env": "^7.14.2",
+    "@babel/preset-typescript": "^7.13.0",
     "@types/aws-lambda": "^8.10.76",
     "@types/express": "^4.17.11",
+    "@types/jest": "^26.0.23",
+    "babel-jest": "^26.6.3",
+    "jest": "^26.6.3",
     "openapi-typescript": "^3.2.4",
     "prettier": "^2.2.1",
     "ts-loader": "^9.1.2",

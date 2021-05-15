@@ -1,15 +1,21 @@
 <template>
   <div style="white-space: nowrap">
-    <template v-for="(streamer, i) in streamers" :key="streamer.id">
-      <iframe
-        :src="`https://player.twitch.tv/?channel=${streamer.name}&parent=localhost&autoplay=true`"
-        :height="layout.unitHeight"
-        :width="layout.unitWidth"
-        :allowfullscreen="true"
-        :frameborder="false"
-      >
-      </iframe>
-      <br v-if="(i + 1) % layout.cols === 0" />
+    <template v-if="streamerNames.length === 0">
+      <p>URIで配信者の名前を指定してください。</p>
+      <p>例: {{ origin }}/?streamer=streamerA,streamerB,streamerC</p>
+    </template>
+    <template v-else>
+      <template v-for="(streamer, i) in liveStreamers" :key="streamer.id">
+        <iframe
+          :src="`https://player.twitch.tv/?channel=${streamer.name}&parent=localhost&autoplay=true`"
+          :height="layout.unitHeight"
+          :width="layout.unitWidth"
+          :allowfullscreen="true"
+          :frameborder="false"
+        >
+        </iframe>
+        <br v-if="(i + 1) % layout.cols === 0" />
+      </template>
     </template>
   </div>
 </template>
@@ -92,22 +98,28 @@ export default defineComponent({
   setup() {
     const queryParameters = parseQueryString();
 
+    const origin = location.origin;
+    const streamerNames = queryParameters.streamer;
+
     const { streamers, reloadStreamers } = useStreamers(
       queryParameters.streamer
     );
+    const liveStreamers = computed(() => {
+      return streamers.value.filter((streamer) => streamer.isLive);
+    });
 
     const layout = computed(() =>
       calculateLayout(
         queryParameters.width,
         queryParameters.height,
-        streamers.value.length
+        liveStreamers.value.length
       )
     );
 
     onMounted(async () => {
       const config = await fetchConfig();
 
-      useNotification(config.pusher, [], async () => {
+      useNotification(config.pusher, streamerNames, async () => {
         await reloadStreamers();
       });
 
@@ -119,7 +131,9 @@ export default defineComponent({
     });
 
     return {
-      streamers,
+      origin,
+      streamerNames,
+      liveStreamers,
       layout,
     };
   },

@@ -3,7 +3,7 @@ import axios from "axios";
 function createAxiosInstance() {
   // HACK: 同期XHR
   const xhr = new XMLHttpRequest();
-  xhr.open("GET", "/config.json", false);
+  xhr.open("GET", "./config.json", false);
   xhr.setRequestHeader("content-type", "application/json");
   xhr.send();
 

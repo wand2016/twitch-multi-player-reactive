@@ -2,7 +2,7 @@
 
 配信者の配信開始・終了に応じて自動的にプレーヤーを増減し、敷き詰めます。
 
-# プレーヤ外部仕様
+# プレーヤー外部仕様
 
 クエリパラメータで配信者名とオプションを指定します。
 
@@ -95,6 +95,27 @@ serverless frameworkを使用しています。 要AWS-CLI
 
 ```sh
 npm run deploy
+```
+
+**初回だけ下記の部分でエラー出る** そのうちなんとかしたい
+
+```yaml
+  environment:
+    CALLBACK_ENDPOINT:
+      # callbackのAPI Gatewayのエンドポイント
+      # .serverless/cloudformation-template-update-stack.json でexport定義されている
+      Fn::ImportValue: sls-twitch-multi-player-${opt:stage,'dev'}-HttpApiUrl
+```
+
+まだリソースができてないので怒られるという
+
+```diff
+  environment:
+-   CALLBACK_ENDPOINT:
+-     # callbackのAPI Gatewayのエンドポイント
+-     # .serverless/cloudformation-template-update-stack.json でexport定義されている
+-     Fn::ImportValue: sls-twitch-multi-player-${opt:stage,'dev'}-HttpApiUrl
++   CALLBACK_ENDPOINT: ""
 ```
 
 ```

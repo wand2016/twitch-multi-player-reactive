@@ -7,7 +7,7 @@
     <template v-else>
       <template v-for="(streamer, i) in liveStreamers" :key="streamer.id">
         <iframe
-          :src="`https://player.twitch.tv/?channel=${streamer.name}&parent=localhost&autoplay=true`"
+          :src="`https://player.twitch.tv/?channel=${streamer.name}&parent=${hostname}&autoplay=true`"
           :height="layout.unitHeight"
           :width="layout.unitWidth"
           :allowfullscreen="true"
@@ -99,6 +99,7 @@ export default defineComponent({
     const queryParameters = parseQueryString();
 
     const origin = location.origin;
+    const hostname = location.hostname;
     const streamerNames = queryParameters.streamer;
 
     const { streamers, reloadStreamers } = useStreamers(
@@ -132,6 +133,7 @@ export default defineComponent({
 
     return {
       origin,
+      hostname,
       streamerNames,
       liveStreamers,
       layout,

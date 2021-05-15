@@ -1,0 +1,42 @@
+@startuml
+
+participant frontend
+participant bff
+participant callback
+actor twitch
+
+group 初期化
+  frontend -> frontend: bffのエンドポイントを取得(config.json)
+  frontend -> bff: その他のコンフィグ問い合わせ(PUSHER_KEYなど)
+  frontend <-- bff
+end group
+
+group 配信者情報取得・プレーヤー表示
+  frontend -> bff: 配信者情報問い合わせ
+  frontend <-- bff: 配信者情報(id, name, is_live)
+  frontend -> frontend: is_live=trueの配信者についてプレーヤー表示
+end group
+
+group 配信監視登録
+  frontend -> bff: 配信者監視登録
+  bff -> twitch: 配信者の配信開始・終了の監視登録。\nEventSub POST /subscription
+  bff <-- twitch: 202 Accepted
+
+  callback <- twitch: コールバックの認証(challenge)
+  callback --> twitch: response
+end group
+
+group 配信開始・終了通知
+  twitch -> twitch: 配信者の配信開始・終了
+  callback <- twitch: 通知(コールバック)
+  frontend <- callback: 通知(WebSocket)
+  callback --> twitch: 200OK
+
+  group 配信者情報再取得・プレーヤー更新
+    frontend -> bff: 配信者情報再問い合わせ
+    frontend <-- bff: 配信者情報(id, name, is_live)
+    frontend -> frontend: is_live=trueの配信者についてプレーヤー表示
+  end group
+end group
+
+@enduml

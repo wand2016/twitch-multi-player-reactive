@@ -1,83 +1,143 @@
-# twitch multi player reactive
+# twitch multi-player reactive
 
-指定のストリーマーが配信を開始したらプレーヤーを動的に追加、配信を停止したらプレーヤーを動的に削除するマルチツイッチ
+配信者の配信開始・終了に応じて自動的にプレーヤーを増減し、敷き詰めます。
 
-# 構築・起動
+# プレーヤ外部仕様
 
-```sh
-cp .env.sample .env
-# .envにいろいろ書く 
-
-npm ci
-npm run serve
-```
-
-localhost:3000 でサーバが起動する。下記のことをしてます
-
-- a. `http://localhost:3000/` でプレーヤーのHTMLをサーブ
-- b. twitchのAPIのプロキシ
-- c. twitchのEventSubのSubscriberサーバ役
-
-c.のために、HTTPS環境にデプロイする必要あり。ngrokが便利です
-
-```sh
-ngrok by @inconshreveable                                                                               (Ctrl+C to quit)
-                                                                                                                        
-Session Status                online                                                                                    
-Account                       xxx@gmail.com (Plan: Free)                                                          
-Update                        update available (version 2.3.40, Ctrl-U to update)                                       
-Version                       2.3.39                                                                                    
-Region                        United States (us)                                                                        
-Web Interface                 http://127.0.0.1:4040                                                                     
-Forwarding                    http://7f8e82d2f058.ngrok.io -> http://localhost:3000                                     
-Forwarding                    https://7f8e82d2f058.ngrok.io -> http://localhost:3000
-```
-
-この場合の`http://7f8e82d2f058.ngrok.io`をEventSubへのリクエストに載せないといけないので`npm run serve`で環境変数として渡してます
+クエリパラメータで配信者名とオプションを指定します。
 
 ```
-  "scripts": {
-    "serve": "CALLBACK_ENDPOINT=$(curl -s localhost:4040/api/tunnels | jq -r '.tunnels[1].public_url') ts-node -r tsconfig-paths/register src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+https://wand2016.github.io/twitch-multi-player-reactive/?width=1600&height=900&streamer=streamer_a,streamer_b,streamer_c
 ```
 
-## 環境変数
+- `streamers`
+  - 配信者名をカンマ区切り
+- `width`, `height`
+  - この幅(width)/高さ(height)の中でプレーヤーを敷き詰めます
+  - 単位はピクセルです
+  - 未指定時は `window.innerWidth`, `window.innerHeight` にフォールバックします
+  
+# 構成
+
+- frontend
+  - ブラウザで動作するプレーヤー部分
+- backend/bff
+  - frontendから見て、twitch APIのBFFにあたるサーバー
+- backend/callback
+  - twitchからのコールバックを受け取るサーバー
+  - HTTPSで動作する必要あり (なので、ローカル開発時は [ngrok](https://ngrok.com/) 等を使用します)
+
+## シーケンス
+
+![](./doc/sequence.png)
+
+
+
+# 環境変数
+
+.env
 
 ```
 CLIENT_ID=
 CLIENT_SECRET=
 PUSHER_KEY=
 PUSHER_SECRET=
-HMAC_SECRET=
+PUSHER_APP_ID=
+PUSHER_CLUSTER=
+PUSHER_CHANNEL=my-channel
+PUSHER_EVENT=my-event
+HMAC_SECRET=123456789a
 ```
 
 - `CLIENT_ID`,`CLIENT_SECRET`
-  - twitchのAPIの認証用。
-  - https://dev.twitch.tv/docs/authentication
-  - https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-client-credentials-flow
-- `PUSHER_KEY`, `PUSHER_SECRET`
-  - サーバからブラウザへの通知にpusherを使用しています。
-    https://pusher.com/ でちゃちゃっとsign upしてサンプルコードの中のを引っこ抜く。
+  - twitch APIの認証用
+    - https://dev.twitch.tv/docs/authentication
+    - https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-client-credentials-flow
+- `PUSHER_KEY`,`PUSHER_SECRET`,`PUSHER_APP_ID`,`PUSHER_CLUSTER`
+  - サーバからブラウザへの通知に [pusher](https://pusher.com/) を使用しています
+  - sign upしてサンプルコードの中のものを使用します
+  - `PUSHER_SECRET`: 通知送信時に使用。backend/callbackの中で使っています
+  - `PUSHER_KEY`: 通知送受信時に使用。backend/callback, frontendの中で使っています
+- `PUSHER_CHANNEL`,`PUSHER_EVENT`
+  - これは何でもいい
 - `HMAC_SECRET`
-  - twitchからのコールバックリクエストの真性性確認用。  
-    Subscription登録時に署名鍵をつけて送ると、コールバックリクエストにHMAC-SHA256の署名がくっついて送られてくるので署名を検証して真性性を確認できます。    
-    が、確認が面倒くさいのでしてません。そのうちします
+  - 10文字以上
+  - backend/callbackで、twitchからのコールバックリクエストの真性性を確認するのに使用します
+    - Subscription登録時に署名鍵をつけて送ると、コールバックリクエストにHMAC-SHA256の署名がくっついて送られてきます
+
+# 開発
+
+## ローカル動作まで
+
+```sh
+cp .env.sample .env
+# .envにいろいろ書く
+
+npm ci
+npm --prefix=backend ci
+npm --prefix=frontend ci
+
+# backendをローカルで起動 (3000番ポート)
+npm run serve:offline
+# ngrokを併用する場合
+CALLBACK_ENDPOINT=$(curl -s localhost:4040/api/tunnels | jq -r '.tunnels[].public_url' | grep -E '^https') npm run serve:offline
+
+# frontendをローカルで起動 (8080番ポート)
+npm --prefix=frontend run serve
+```
 
 
-# プレーヤ閲覧
+## デプロイまで
+
+### backendビルド・デプロイ
+
+serverless frameworkを使用しています。 要AWS-CLI
+
+```sh
+npm run deploy
+```
 
 ```
-http://localhost:3000/?pusher_key=xxxxxxxx&width=1600&height=900&channels=streamer_name_a,streamer_name_b,...
+...
+
+endpoints:
+  ANY - https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/dev/
+  ANY - https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/dev/{proxy+}
 ```
 
-クエリパラメータでいろいろ指定する
+frontendのデプロイで使うので、`https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/` の部分を控えておきます
 
+### frontendビルド・デプロイ
 
-- `pusher_key`
-  - サーバからプレーヤへの通知に使用。めんどくさいのでindex.htmlレンダリング時に渡すようにしたい
-- `width`, `height`
-  - この幅/高さの中でプレーヤーをやりくりします
-  - 未指定時はwindow.innerWidth/window.innerHeightにフォールバック
-- `channels`
-  - チャンネル名をカンマ区切り
+デプロイ先のパスに応じてvue.config.jsの`publicPath`の設定が必要
+
+```js
+module.exports = {
+  publicPath:
+    process.env.NODE_ENV === "production"
+      ? "/twitch-multi-player-reactive/"
+      : "/",
+};
+```
+
+ビルド
+
+```sh
+npm --prefix=frontend run build
+```
+
+frontend動作時、コンフィグ類はBFFサーバから取ってきますが、BFFサーバのエンドポイント情報だけはconfig.jsonから同期XHRで取ってくる作りになっています  
+(あとで変えるかも)
+
+それを先ほど控えたAPIエンドポイントで書き換える。
+
+frontend/dist/config.json
+
+```diff
+  {
+-   "API_ENDPOINT": "http://localhost:3000/dev/api/"
++   "API_ENDPOINT": "https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/dev/api/"
+  }
+```
+
+あとは S3+CloudFront なり GitHub Pages なりにデプロイしてください
